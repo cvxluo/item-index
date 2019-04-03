@@ -24,26 +24,26 @@ with open ("backup_enchantList.txt", "r") as f:
       key = line.strip()
     else:
       enchantList[key] = line.strip()
-        
+
 @bot.event
 async def on_ready():
     print('Logged in as')
     print(bot.user.name)
 
-@bot.command()    
+@bot.command()
 async def listening():
     await bot.say('Listening')
 
 @bot.command(pass_context=True)
 async def additem(ctx):
   await bot.say('Type the name of the item you wish to add...')
-  itemWait = await bot.wait_for_message(author = ctx.message.author)   
+  itemWait = await bot.wait_for_message(author = ctx.message.author)
   tempItemName1 = itemWait.content.lower()
   await bot.say('Paste the link of or upload the photo you wish to add...')
   itemWaitPhoto = await bot.wait_for_message(author = ctx.message.author)
   for attachment in itemWaitPhoto.attachments:
       tempPhoto = attachment.get("url")
-  tempItemPhoto1 = itemWaitPhoto.content or tempPhoto 
+  tempItemPhoto1 = itemWaitPhoto.content or tempPhoto
   itemList[tempItemName1] = tempItemPhoto1
   await bot.say('Added Item')
   print ('Added Item')
@@ -51,13 +51,13 @@ async def additem(ctx):
 @bot.command(pass_context=True)
 async def addenchant(ctx):
   await bot.say('Type the name of the enchantment you wish to add...')
-  enchantWait = await bot.wait_for_message(author = ctx.message.author)   
+  enchantWait = await bot.wait_for_message(author = ctx.message.author)
   tempEName = enchantWait.content.lower()
   await bot.say('Paste the link of or upload the photo you wish to add...')
   enchantWaitPhoto = await bot.wait_for_message(author = ctx.message.author)
   for attachment in enchantWaitPhoto.attachments:
       EtempPhoto = attachment.get("url")
-  tempEPhoto = enchantWaitPhoto.content or EtempPhoto 
+  tempEPhoto = enchantWaitPhoto.content or EtempPhoto
   enchantList[tempEName] = tempEPhoto
   await bot.say('Added Enchantment')
   print ('Added Enchantment')
@@ -67,7 +67,7 @@ async def item(ctx, *args):
   g = ' '.join(args)
   f = g.lower()
   em = discord.Embed(title=f , description="Here's your item!", color=1)
-  print(itemList.get(f))
+  print(itemList[f])
   itemImage = str(itemList.get(f))
   em.set_image(url=itemImage)
   await bot.send_message(ctx.message.channel, embed = em)
@@ -88,28 +88,28 @@ async def enchant(ctx, *args):
 async def delenchant(ctx):
   if ctx.message.author.id == "177848553924722688":
     await bot.say('Type the name of the enchant you wish to delete...')
-    enchantWait = await bot.wait_for_message(author = ctx.message.author)   
+    enchantWait = await bot.wait_for_message(author = ctx.message.author)
     tempEDelete = enchantWait.content.lower()
     del enchantList[tempEDelete]
     await bot.say('Enchant Deleted!')
     print('Deleted Enchant')
-                     
+
 @bot.command(pass_context=True)
 async def delitem(ctx):
   if ctx.message.author.id == "177848553924722688":
     await bot.say('Type the name of the item you wish to delete...')
-    itemWait = await bot.wait_for_message(author = ctx.message.author)   
+    itemWait = await bot.wait_for_message(author = ctx.message.author)
     tempItemDelete = itemWait.content.lower()
     del itemList[tempItemDelete]
     await bot.say('Item Deleted!')
     print('Deleted Item')
-    
+
 @bot.command(pass_context=True)
 async def backup(ctx):
    if ctx.message.author.id == "177848553924722688":
     itemListItem = list(itemList.keys())
     itemListPhoto = list(itemList.values())
-    with open('backup_ItemList' + '.txt', 'w') as out_file:
+    with open('backup_ItemList.txt', 'w') as out_file:
         for i in range(len(itemListItem)):
             out_string = ""
             out_string += str(itemListItem[i])
@@ -126,7 +126,7 @@ async def enchantbackup(ctx):
    if ctx.message.author.id == "177848553924722688":
     enchantListItem = list(enchantList.keys())
     enchantListPhoto = list(enchantList.values())
-    with open('backup_enchantList' + '.txt', 'w') as eout_file:
+    with open('backup_enchantList.txt', 'w') as eout_file:
         for ei in range(len(enchantListItem)):
             eout_string = ""
             eout_string += str(enchantListItem[ei])
@@ -159,23 +159,34 @@ async def listenchantspython(ctx):
 @bot.command()
 async def itemlist():
   itemsinList = itemList.keys()
-  itemsList = ', '.join(itemsinList)
-  if len(itemsList) > 2000:
-    itemsList2 = itemsList[:2000]
-    itemsList3 = itemsList[2000:4000]
-    itemsList4 = itemsList[4000:6000]
-    await bot.say(itemsList2)
-    await bot.say(itemsList3)
-    await bot.say(itemsList4)
-  else:
-    await bot.say(itemsList)
-     
+  output = ""
+  for item in itemsinList :
+      if (len(item) + len(output) < 2000) :
+          output += item
+          output += ", "
+
+      else :
+          await bot.say(output)
+          output = item + ", "
+
+  await bot.say(output)
+
+
+  # itemsList = ', '.join(itemsinList)
+  # if len(itemsList) > 2000:
+  #   itemsList2 = itemsList[:2000]
+  #   itemsList3 = itemsList[2000:4000]
+  #   itemsList4 = itemsList[4000:6000]
+  #   await bot.say(itemsList2)
+  #   await bot.say(itemsList3)
+  #   await bot.say(itemsList4)
+  # else:
+  #   await bot.say(itemsList)
+
 @bot.command()
 async def enchantlist():
   EinList = enchantList.keys()
   EList = ', '.join(EinList)
   await bot.say(EList)
-     
+
 bot.run('NTYxMTQ0ODcxMzk0NzM4MTgx.XJ_CUw.2g2D_HzkLcZesNKz7q9TR2S0Icg')
-
-
