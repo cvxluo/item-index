@@ -13,6 +13,13 @@ items = []
 
 enchantList = {}
 
+admins = ["177848553924722688", "140920560610836480"] # Mehaz, Vex
+
+def verified (id) :
+    return id in admins
+
+
+
 with open ("items.txt", "r") as f:
 
   for line in f :
@@ -25,7 +32,7 @@ with open ("items.txt", "r") as f:
 
 @bot.command(pass_context=True)
 async def backup(ctx):
-   if ctx.message.author.id == "177848553924722688":
+   if verified(ctx.message.author.id) :
     with open('items.txt', 'w') as out_file:
         for item in items :
             data = ""
@@ -74,30 +81,61 @@ async def additem(ctx):
   print ('Added Item')
 
 
+@bot.command(pass_context=True)
+async def addtag(ctx):
+    if not verified(ctx.message.author.id) :
+        return
+    await bot.say('What item would you like to tag?')
+    toTag = await bot.wait_for_message(author = ctx.message.author)
+    itemSearch = toTag.content.lower().replace("'", "")
+
+    await bot.say('What tag would you like to add?')
+    tag = await bot.wait_for_message(author = ctx.message.author)
+
+    for item in items :
+        if (itemSearch == item.getSearchTerm()) :
+            item.addTag(tag.content)
+            break
+
+
+    await bot.say('Added ' + tag.content + ' to ' + toTag.content)
+    print ('Added Tag')
+
+
 
 @bot.command(pass_context=True)
 async def item(ctx, *args):
   itemSearch = ' '.join(args).lower().replace("'", "")
 
+  found = False
   for item in items :
       if (itemSearch == item.getSearchTerm()) :
-          em = discord.Embed(title=item.name , description="Here's your item!", color=1)
+          em = discord.Embed(title=item.name, color=1)
+
+          for tag in item.tags :
+              em.add_field(name = "Tag", value = tag, inline = False)
+
           itemImage = str(item.imageURL)
           em.set_image(url=itemImage)
           await bot.send_message(ctx.message.channel, embed = em)
+          found = True
           break
+
+  if not found :
+      await bot.say("Item not found")
+
 
   print ('Found Item')
 
 @bot.command(pass_context=True)
 async def delitem(ctx):
-  if ctx.message.author.id == "177848553924722688":
+  if verified(ctx.message.author.id):
     await bot.say('Type the name of the item you wish to delete...')
     itemWait = await bot.wait_for_message(author = ctx.message.author)
-    dItemName = itemWait.content.lower()
+    itemSearch = itemWait.content.lower().replace("'", "")
 
     for i in range(len(items)) :
-        if (dItemName == item.getSearchTerm()) :
+        if (itemSearch == items[i].getSearchTerm()) :
             del items[i]
             break
 
@@ -115,19 +153,21 @@ async def listening():
 
 @bot.command(pass_context=True)
 async def hey(ctx):
-  if ctx.message.author.id == "177848553924722688":
+  if ctx.message.author.id == "177848553924722688" :
       await bot.say('Hey Mehaz!')
+  elif ctx.message.author.id == "140920560610836480" :
+      await bot.say('Hey Vex!')
   else:
       await bot.say('Imposter!')
 
 @bot.command(pass_context=True)
 async def listitemspython(ctx):
-  if ctx.message.author.id == "177848553924722688":
+  if verified(ctx.message.author.id) :
     print(itemList)
 
 @bot.command(pass_context=True)
 async def listenchantspython(ctx):
-  if ctx.message.author.id == "177848553924722688":
+  if verified(ctx.message.author.id) :
     print(enchantList)
 
 @bot.command()
@@ -145,21 +185,20 @@ async def itemlist():
   await bot.say(output[:-2])
 
 
+@bot.command(pass_context=True)
+async def capitalize(ctx):
+    if verified(ctx.message.author.id) :
+        for item in items :
+
+           name = ""
+           for word in item.name.split() :
+               name += word.capitalize() + " "
+
+           item.name = name.strip()
+
+
 
 bot.run('NTYxMTQ0ODcxMzk0NzM4MTgx.XJ_CUw.2g2D_HzkLcZesNKz7q9TR2S0Icg')
-
-#CAPITALIZE
-# @bot.command(pass_context=True)
-# async def capitalize(ctx):
-#    for item in items :
-#
-#        name = ""
-#        for word in item.name.split() :
-#            name += word.capitalize() + " "
-#
-#        item.name = name.strip()
-
-
 
 
 #TRANSFER COMMAND
