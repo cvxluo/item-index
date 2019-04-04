@@ -24,9 +24,23 @@ with open ("items.txt", "r") as f:
 
   for line in f :
       data = line.split()
-      #tags = data[2].split("-")
       name = " ".join(data[0].split("$"))
-      item = Item(name, data[1])
+
+      tags = {}
+      if (len(data) > 2) :
+          tagData = data[2].split("|")
+          for tag in tagData :
+              nameSplit = tag.split(":")
+              tagName = nameSplit[0]
+
+              t = nameSplit[1].split(',')
+
+              tags[tagName] = []
+              for attribute in t :
+                  tags[tagName].append(attribute.replace('$', ' '))
+
+
+      item = Item(name, data[1], tags)
       items.append(item)
 
 
@@ -37,21 +51,24 @@ async def backup(ctx):
         for item in items :
             data = ""
 
-            splitName = item.name.split()
-            for i in range(len(splitName)) :
-                data += splitName[i]
-                if i != len(splitName) - 1 :
-                    data += "$"
-
-                else :
-                    data += " "
+            data = "$".join(item.name.split()) + " "
 
             data += item.imageURL + " "
 
-            """
-            for tag in item.tags :
-                data += tag + "-"
-            """
+            t = []
+            for tagType, aTags in item.tags.items() :
+                newTag = ""
+                newTag += tagType + ":"
+
+                storeTags = []
+                for tag in aTags :
+                    storeTags.append(tag.replace(' ', '$'))
+
+                newTag += ','.join(storeTags)
+
+                t.append(newTag)
+
+            data += '|'.join(t)
 
             data += "\n"
 
@@ -77,7 +94,7 @@ async def additem(ctx):
 
   item = Item(itemName, itemPhoto)
   items.append(item)
-  await bot.say('Added Item')
+  await bot.say('Added Item ' + itemWait.content)
   print ('Added Item')
 
 
@@ -89,12 +106,20 @@ async def addtag(ctx):
     toTag = await bot.wait_for_message(author = ctx.message.author)
     itemSearch = toTag.content.lower().replace("'", "")
 
+
+    await bot.say('What is the type of tag you are adding?')
+    tagType = await bot.wait_for_message(author = ctx.message.author)
+
     await bot.say('What tag would you like to add?')
     tag = await bot.wait_for_message(author = ctx.message.author)
 
+    capWords = []
+    for word in tag.content.split() :
+        capWords.append(word.capitalize())
+
     for item in items :
         if (itemSearch == item.getSearchTerm()) :
-            item.addTag(tag.content)
+            item.addTag(tagType.content.capitalize(), ' '.join(capWords))
             break
 
 
@@ -112,8 +137,10 @@ async def item(ctx, *args):
       if (itemSearch == item.getSearchTerm()) :
           em = discord.Embed(title=item.name, color=1)
 
-          for tag in item.tags :
-              em.add_field(name = "Tag", value = tag, inline = False)
+          for tagType, aTags in item.tags.items() :
+
+              tag = ', '.join(aTags)
+              em.add_field(name = tagType, value = tag, inline = False)
 
           itemImage = str(item.imageURL)
           em.set_image(url=itemImage)
@@ -141,6 +168,31 @@ async def delitem(ctx):
 
     await bot.say('Item Deleted!')
     print('Deleted Item')
+
+
+@bot.command(pass_context=True)
+async def deltag(ctx, *args):
+    if verified(ctx.message.author.id):
+        await bot.say('Type the name of the item...')
+        itemWait = await bot.wait_for_message(author = ctx.message.author)
+        itemSearch = itemWait.content.lower().replace("'", "")
+
+        await bot.say('Type the type of tag...')
+        tagType = await bot.wait_for_message(author = ctx.message.author)
+
+        await bot.say('Type the tag name...')
+        tagName = await bot.wait_for_message(author = ctx.message.author)
+
+        for item in items :
+            if (itemSearch == item.getSearchTerm()) :
+                item.deleteTag(tagType.content, tagName.content)
+                break
+
+        await bot.say('Tag Deleted!')
+
+        print('Deleted Item')
+
+
 
 @bot.event
 async def on_ready():
@@ -195,6 +247,13 @@ async def capitalize(ctx):
                name += word.capitalize() + " "
 
            item.name = name.strip()
+
+
+@bot.command(pass_context=True)
+async def alphabetize(ctx):
+    if verified(ctx.message.author.id) :
+        items.sort()
+
 
 
 
