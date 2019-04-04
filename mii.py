@@ -100,8 +100,6 @@ async def additem(ctx):
 
 @bot.command(pass_context=True)
 async def addtag(ctx):
-    if not verified(ctx.message.author.id) :
-        return
     await bot.say('What item would you like to tag?')
     toTag = await bot.wait_for_message(author = ctx.message.author)
     itemSearch = toTag.content.lower().replace("'", "")
@@ -172,25 +170,54 @@ async def delitem(ctx):
 
 @bot.command(pass_context=True)
 async def deltag(ctx, *args):
-    if verified(ctx.message.author.id):
-        await bot.say('Type the name of the item...')
-        itemWait = await bot.wait_for_message(author = ctx.message.author)
-        itemSearch = itemWait.content.lower().replace("'", "")
+    await bot.say('Type the name of the item...')
+    itemWait = await bot.wait_for_message(author = ctx.message.author)
+    itemSearch = itemWait.content.lower().replace("'", "")
 
-        await bot.say('Type the type of tag...')
-        tagType = await bot.wait_for_message(author = ctx.message.author)
+    await bot.say('Type the type of tag...')
+    tagType = await bot.wait_for_message(author = ctx.message.author)
 
-        await bot.say('Type the tag name...')
-        tagName = await bot.wait_for_message(author = ctx.message.author)
+    await bot.say('Type the tag name...')
+    tagName = await bot.wait_for_message(author = ctx.message.author)
 
-        for item in items :
-            if (itemSearch == item.getSearchTerm()) :
-                item.deleteTag(tagType.content, tagName.content)
-                break
+    for item in items :
+        if (itemSearch == item.getSearchTerm()) :
+            item.deleteTag(tagType.content, tagName.content)
+            break
 
-        await bot.say('Tag Deleted!')
+    await bot.say('Tag Deleted!')
 
-        print('Deleted Item')
+    print('Deleted Item')
+
+
+@bot.command(pass_context=True)
+async def tag(ctx):
+
+    await bot.say('What is the type of tag you are searching for?')
+    tagTypeM = await bot.wait_for_message(author = ctx.message.author)
+    tagType = tagTypeM.content.capitalize()
+
+    await bot.say('What is the tag you are searching for?')
+    tagNameM = await bot.wait_for_message(author = ctx.message.author)
+    tagName = tagNameM.content.capitalize()
+
+    taggedItems = []
+    for item in items :
+        if tagType in item.tags.keys() and tagName in item.tags[tagType] :
+            taggedItems.append(item.name)
+
+    output = ""
+    if len(taggedItems) > 0 :
+        output += "Items with " + tagName + ":\n"
+        for itemName in taggedItems :
+            output += itemName + "\n"
+
+    else :
+        output += "No items found with that tag"
+
+    await bot.say(output)
+
+    print ('Tag Search')
 
 
 
