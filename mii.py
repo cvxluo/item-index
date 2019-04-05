@@ -31,7 +31,7 @@ with open ("items.txt", "r") as f:
           tagData = data[2].split("|")
           for tag in tagData :
               nameSplit = tag.split(":")
-              tagName = nameSplit[0]
+              tagName = nameSplit[0].replace('$', ' ')
 
               t = nameSplit[1].split(',')
 
@@ -58,7 +58,7 @@ async def backup(ctx):
             t = []
             for tagType, aTags in item.tags.items() :
                 newTag = ""
-                newTag += tagType + ":"
+                newTag += tagType.replace(' ', '$') + ":"
 
                 storeTags = []
                 for tag in aTags :
