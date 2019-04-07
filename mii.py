@@ -221,6 +221,51 @@ async def tag(ctx):
 
 
 
+# Kaul Stuff
+# TODO: Move into separate file
+
+recentFought = {}
+
+@bot.command(pass_context=True)
+async def rank(ctx):
+
+    author = ctx.message.author
+    mention = author.mention
+    server = bot.get_server('313066655494438922')
+    role = discord.utils.get(server.roles, name="Kaul")
+    await bot.add_roles(author, role)
+
+    await bot.say(mention + ", you now have the role for Kaul")
+
+@bot.command(pass_context=True)
+async def derank(ctx):
+
+    author = ctx.message.author
+    mention = author.mention
+    server = bot.get_server('313066655494438922')
+    role = discord.utils.get(server.roles, name="Kaul")
+    await bot.remove_roles(author, role)
+
+    await bot.say(mention + ", you have removed your role for Kaul")
+
+
+
+@bot.command(pass_context=True)
+async def kaultime(ctx, *args):
+
+    author = ctx.message.author.id
+    server = bot.get_server('313066655494438922')
+    role = discord.utils.get(server.roles, name="Kaul")
+    mention = role.mention
+
+    if (args) :
+        await bot.say(mention + ", Kaul in " + args[0] + " seconds!")
+    else :
+        await bot.say(mention + ", its Kaul time!")
+
+
+
+
 @bot.event
 async def on_ready():
     print('Logged in as')
