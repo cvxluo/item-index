@@ -5,6 +5,8 @@ from discord.ext.commands import Bot
 import time
 from item import Item
 
+import datetime
+
 
 
 bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
@@ -224,7 +226,6 @@ async def tag(ctx):
 # Kaul Stuff
 # TODO: Move into separate file
 
-recentFought = {}
 
 @bot.command(pass_context=True)
 async def rank(ctx):
@@ -250,6 +251,8 @@ async def derank(ctx):
 
 
 
+recentFought = datetime.datetime.now()
+
 @bot.command(pass_context=True)
 async def kaultime(ctx, *args):
 
@@ -258,10 +261,17 @@ async def kaultime(ctx, *args):
     role = discord.utils.get(server.roles, name="Kaul")
     mention = role.mention
 
-    if (args) :
-        await bot.say(mention + ", Kaul in " + args[0] + " seconds!")
+    time = datetime.datetime.now()
+    nextTime = recentFought + datetime.timedelta(minutes=5)
+
+    if (time > nextTime) :
+        if (args) :
+            await bot.say(mention + ", Kaul in " + args[0] + " seconds!")
+        else :
+            await bot.say(mention + ", its Kaul time!")
+
     else :
-        await bot.say(mention + ", its Kaul time!")
+        await bot.say("You must wait " + str(nextTime - time) + " to ping Kaul again.")
 
 
 
