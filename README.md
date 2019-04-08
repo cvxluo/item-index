@@ -18,6 +18,7 @@ Monumenta Item Index for Discord
     * Better antispam for Kaul - maybe connecting to server?
     * Parsing Mirror's item index into the bot
     * Referencing the wiki - maybe a helper tool to generate pages?
+    * Database - FIREBASE YEET
 * ##### Backend
     * Make all arguments truly optional in item creation
     * Migrate off this dumb text file
@@ -25,7 +26,4 @@ Monumenta Item Index for Discord
     * Split Kaul from rest of the bot
     * Merge functions with other bots?
     * Figure out how to call async functions within other async functions - maybe some helper functions in a separate file do all the work?
-    * Get rid of createKaul thing it's a little spooky to still have around
-    * Get rid of pycache directory with a better gitignore
     * Maybe set up a pip env for the whole project?
-    * Clean up backup system

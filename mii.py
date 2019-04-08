@@ -240,6 +240,18 @@ async def kaultime(ctx, *args):
         await bot.say("You must wait " + str(minutes) + " minutes and " + str(seconds) + " seconds to ping Kaul again.")
 
 
+@bot.command(pass_context=True)
+async def kaulnum(ctx, *args):
+
+    server = bot.get_server('313066655494438922')
+    role = discord.utils.get(server.roles, name="Kaul")
+
+    count = 0
+    for member in server.members:
+        if (role in member.roles) :
+            count += 1
+
+    await bot.say(str(count) + " players have the Kaul role")
 
 
 @bot.event
@@ -302,10 +314,10 @@ async def alphabetize(ctx):
     if verified(ctx.message.author.id) :
         items.sort()
 
-@bot.command(pass_context=True)
-async def createKaul(ctx):
-    if verified(ctx.message.author.id) :
-        await bot.create_role(ctx.message.server, name = "Kaul", permissions = discord.Permissions.none(), colour = discord.Colour.darker_grey(), hoist = False, mentionable = True)
+# @bot.command(pass_context=True)
+# async def createKaul(ctx):
+#     if verified(ctx.message.author.id) :
+#         await bot.create_role(ctx.message.server, name = "Kaul", permissions = discord.Permissions.none(), colour = discord.Colour.darker_grey(), hoist = False, mentionable = True)
 
 
 
