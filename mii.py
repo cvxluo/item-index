@@ -224,12 +224,15 @@ async def kaultime(ctx, *args):
 
     if (time > nextTime) :
         if (args) :
-            await bot.say(mention + ", Kaul in " + args[0] + " seconds!")
+            await bot.say(mention + " , Kaul in " + args[0] + " seconds!")
         else :
             await bot.say(mention + ", its Kaul time!")
 
     else :
-        await bot.say("You must wait " + str(nextTime - time) + " to ping Kaul again.")
+        wait = nextTime - time
+        minutes = (wait.seconds // 60) % 60
+        seconds = wait.seconds % 60
+        await bot.say("You must wait " + str(minutes) + " minutes and " + str(seconds) + " seconds to ping Kaul again.")
 
 
 
@@ -293,6 +296,13 @@ async def capitalize(ctx):
 async def alphabetize(ctx):
     if verified(ctx.message.author.id) :
         items.sort()
+
+@bot.command(pass_context=True)
+async def createKaul(ctx):
+    if verified(ctx.message.author.id) :
+        await bot.create_role(ctx.message.server, name = "Kaul", permissions = discord.Permissions.none(), colour = discord.Colour.darker_grey(), hoist = False, mentionable = True)
+
+
 
 
 
