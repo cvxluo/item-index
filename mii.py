@@ -214,6 +214,9 @@ recentFought = datetime.datetime.now()
 @bot.command(pass_context=True)
 async def kaultime(ctx, *args):
 
+    # TODO: remove this janky ass system
+    global recentFought
+
     author = ctx.message.author.id
     server = bot.get_server('313066655494438922')
     role = discord.utils.get(server.roles, name="Kaul")
