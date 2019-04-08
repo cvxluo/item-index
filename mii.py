@@ -228,6 +228,8 @@ async def kaultime(ctx, *args):
         else :
             await bot.say(mention + ", its Kaul time!")
 
+        recentFought = time
+
     else :
         wait = nextTime - time
         minutes = (wait.seconds // 60) % 60
