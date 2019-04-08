@@ -17,7 +17,7 @@ class Item (object) :
 
     def fromStore (line) :
         data = line.split()
-        name = data[0].replace("$", ' '))
+        name = data[0].replace("$", ' ')
 
         storedTags = {}
         if (len(data) > 2) :
