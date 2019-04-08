@@ -53,7 +53,7 @@ Divine$Thaumaturge's$Greed https://i.imgur.com/fDXXW97.png
 Divine$Watcher's$Sword https://i.imgur.com/8e6r0Vh.png Thebestweaponintheentiregamedontatme:Thebestweaponintheentiregamedontatme
 Doom's$Edge https://cdn.discordapp.com/attachments/539112477712056320/562932103004684301/dooms_edge.PNG 
 Earth's$Might https://i.imgur.com/PQTX2rp.png 
-Edge$Of$Death https://cdn.discordapp.com/attachments/562691403596169216/562776612320575529/unknown.png Rarity:Rare|Enchantments:Protection$2,Mending|Location:Ephemeral$Corridors
+Edge$Of$Death https://cdn.discordapp.com/attachments/562691403596169216/562776612320575529/unknown.png Rarity:Rare&Enchantments:Protection$2,Mending&Location:Ephemeral$Corridors
 Elder$Scales https://cdn.discordapp.com/attachments/562691403596169216/562777900185550849/unknown.png 
 Elemental$Spellblade https://i.imgur.com/tnI0nB7.png 
 Elemental$Wrath https://i.imgur.com/YeXGjIj.png 
@@ -150,7 +150,7 @@ Whispering$Chains https://cdn.discordapp.com/attachments/562691403596169216/5627
 Whispers$Of$The$Blizzard https://cdn.discordapp.com/attachments/562691403596169216/562777298655379476/unknown.png 
 Wind's$Strength https://i.imgur.com/B49DvqA.png 
 Wormwood$Oil https://i.imgur.com/EYcxkrF.png 
-Yurei https://cdn.discordapp.com/attachments/562691403596169216/562776432930062337/unknown.png Rarity:Rare|Location:Ephemeral$Corridors|Type$of$item:Stone$Sword
+Yurei https://cdn.discordapp.com/attachments/562691403596169216/562776432930062337/unknown.png Rarity:Rare&Location:Ephemeral$Corridors&Type$of$item:Stone$Sword
 Ancient$Robes https://cdn.discordapp.com/attachments/562691403596169216/563806353823629312/unknown.png 
 Angelic$Pants https://cdn.discordapp.com/attachments/562691403596169216/563807732457668610/unknown.png 
 Angelic$Sword https://cdn.discordapp.com/attachments/562691403596169216/563808844799672330/unknown.png 

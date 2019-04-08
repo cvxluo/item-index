@@ -25,25 +25,7 @@ def verified (id) :
 with open ("items.txt", "r") as f:
 
   for line in f :
-      data = line.split()
-      name = " ".join(data[0].split("$"))
-
-      tags = {}
-      if (len(data) > 2) :
-          tagData = data[2].split("|")
-          for tag in tagData :
-              nameSplit = tag.split(":")
-              tagName = nameSplit[0].replace('$', ' ')
-
-              t = nameSplit[1].split(',')
-
-              tags[tagName] = []
-              for attribute in t :
-                  tags[tagName].append(attribute.replace('$', ' '))
-
-
-      item = Item(name, data[1], tags)
-      items.append(item)
+      items.append(Item.fromStore(line))
 
 
 @bot.command(pass_context=True)
@@ -51,31 +33,7 @@ async def backup(ctx):
    if verified(ctx.message.author.id) :
     with open('items.txt', 'w') as out_file:
         for item in items :
-            data = ""
-
-            data = "$".join(item.name.split()) + " "
-
-            data += item.imageURL + " "
-
-            t = []
-            for tagType, aTags in item.tags.items() :
-                newTag = ""
-                newTag += tagType.replace(' ', '$') + ":"
-
-                storeTags = []
-                for tag in aTags :
-                    storeTags.append(tag.replace(' ', '$'))
-
-                newTag += ','.join(storeTags)
-
-                t.append(newTag)
-
-            data += '|'.join(t)
-
-            data += "\n"
-
-            out_file.write(data)
-
+            out_file.write(item.storeFormat() + "\n")
 
     await bot.say('Backed up items!')
     print ('Backed up items')
