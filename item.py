@@ -2,11 +2,13 @@
 class Item (object) :
 
     def __init__(self, name, imageURL = None, tags = None) :
-        if (name) :
-            self.name = name
+
+        self.name = name
 
         if (imageURL) :
             self.imageURL = imageURL
+        else :
+            self.imageURL = None
 
         if tags == None :
             self.tags = {}

@@ -9,6 +9,26 @@ import datetime
 
 
 
+# Firebase initialization and creation of a reference
+
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
+
+# Fetch the service account key JSON file contents
+cred = credentials.Certificate('monumenta-item-index-firebase-adminsdk-2vgeu-06804b36e1.json')
+
+# Initialize the app with a service account, granting admin privileges
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://monumenta-item-index.firebaseio.com/'
+})
+
+# As an admin, the app has access to read and write all data, regradless of Security Rules
+ref = db.reference('items')
+# print(ref.get())
+
+
+
 bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
 
 items = []
@@ -21,23 +41,27 @@ def verified (id) :
     return id in admins
 
 
-
-with open ("items.txt", "r") as f:
-
-  for line in f :
-      items.append(Item.fromStore(line))
+for name, data in ref.get().items() :
+    itemName = data['name'] if 'name' in data else "ERROR"
+    itemURL = data['imageURL'] if 'imageURL' in data else None
+    itemTags = data['tags'] if 'tags' in data else None
+    items.append(Item(itemName, itemURL, itemTags))
 
 
 @bot.command(pass_context=True)
 async def backup(ctx):
-   if verified(ctx.message.author.id) :
-    with open('items.txt', 'w') as out_file:
-        for item in items :
-            out_file.write(item.storeFormat() + "\n")
+    if verified(ctx.message.author.id) :
 
-    await bot.say('Backed up items!')
-    print ('Backed up items')
-   else:
+        for item in items :
+            ref.child(item.name).set({
+                'name' : item.name,
+                'imageURL' : item.imageURL,
+                'tags' : item.tags
+            })
+
+        await bot.say('Backed up items to Firebase')
+        print ('Backed up items')
+    else:
       await bot.say("You don't have permission to do that.")
 
 
