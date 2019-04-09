@@ -67,19 +67,54 @@ async def backup(ctx):
 
 @bot.command(pass_context=True)
 async def additem(ctx):
-  await bot.say('Type the name of the item you wish to add...')
-  itemWait = await bot.wait_for_message(author = ctx.message.author)
-  itemName = itemWait.content.lower()
-  await bot.say('Paste the link of or upload the photo you wish to add...')
-  itemWaitPhoto = await bot.wait_for_message(author = ctx.message.author)
-  for attachment in itemWaitPhoto.attachments:
-      tempPhoto = attachment.get("url")
-  itemPhoto = itemWaitPhoto.content or tempPhoto
+    await bot.say('What is the item NAME?')
+    itemWait = await bot.wait_for_message(author = ctx.message.author)
+    itemName = itemWait.content
 
-  item = Item(itemName, itemPhoto)
-  items.append(item)
-  await bot.say('Added Item ' + itemWait.content)
-  print ('Added Item')
+    await bot.say("What is the IMAGE for the item? (If you don't have an image, type 'none')")
+    itemWaitPhoto = await bot.wait_for_message(author = ctx.message.author)
+    itemPhoto = ""
+    if (itemWaitPhoto.content != 'none' or itemWaitPhoto.attachments) :
+        for attachment in itemWaitPhoto.attachments:
+            tempPhoto = attachment.get("url")
+
+        itemPhoto = itemWaitPhoto.content or tempPhoto
+
+
+    # TODO: This logic is super convoluted for a simple task, please fix
+
+    tags = {}
+    await bot.say("Does this item have tags? (If you don't have any tags, or if you're done, type 'done')")
+    tagMessage = await bot.wait_for_message(author = ctx.message.author)
+    if (tagMessage.content != 'done') :
+        await bot.say("What is the type of tag you want to add? (ex. Enchantments, Location, etc.)")
+        tagType = await bot.wait_for_message(author = ctx.message.author)
+        await bot.say("What is the tag you would like to add? (ex. Protection 2, Halls of Wind and Blood)")
+        tagName = await bot.wait_for_message(author = ctx.message.author)
+
+        while (tagName.content != 'done') :
+            tags[tagType.content] = tagName.message.content
+            await bot.say("If you have additional tags, please enter them one at a time. Otherwise, type 'done'.")
+            tagName = await bot.wait_for_message(author = ctx.message.author)
+
+        await bot.say("Does this item have more tags? (If you don't have any more tags, or if you're done, type 'done')")
+        tagMessage = await bot.wait_for_message(author = ctx.message.author)
+
+
+    item = Item(itemName, itemPhoto, tags)
+    items.append(item)
+    cap()
+    alpha()
+
+    ref.child(itemName).set({
+        'name' : itemName,
+        'imageURL' : itemPhoto,
+        'tags' : tags
+    })
+
+
+    await bot.say('Added Item ' + itemWait.content)
+    print ('Added Item')
 
 
 @bot.command(pass_context=True)
@@ -102,6 +137,9 @@ async def addtag(ctx):
     for item in items :
         if (itemSearch == item.getSearchTerm()) :
             item.addTag(tagType.content.capitalize(), ' '.join(capWords))
+            ref.child(item.name).update({
+                'tags' : item.tags
+            })
             break
 
 
@@ -124,8 +162,10 @@ async def item(ctx, *args):
               tag = ', '.join(aTags)
               em.add_field(name = tagType, value = tag, inline = False)
 
-          itemImage = str(item.imageURL)
-          em.set_image(url=itemImage)
+          if (item.imageURL) :
+              itemImage = str(item.imageURL)
+              em.set_image(url=itemImage)
+
           await bot.send_message(ctx.message.channel, embed = em)
           found = True
           break
@@ -136,16 +176,19 @@ async def item(ctx, *args):
 
   print ('Found Item')
 
+
+# THIS DOES NOT WORK RIGHT NOW, MUST MANUALLY DELETE IN DATABASE
 @bot.command(pass_context=True)
 async def delitem(ctx):
   if verified(ctx.message.author.id):
-    await bot.say('Type the name of the item you wish to delete...')
+    await bot.say('What item would you like to delete?')
     itemWait = await bot.wait_for_message(author = ctx.message.author)
     itemSearch = itemWait.content.lower().replace("'", "")
 
     for i in range(len(items)) :
         if (itemSearch == items[i].getSearchTerm()) :
             del items[i]
+            ref.child(items[i].name).delete()
             break
 
     await bot.say('Item Deleted!')
@@ -167,6 +210,9 @@ async def deltag(ctx, *args):
     for item in items :
         if (itemSearch == item.getSearchTerm()) :
             item.deleteTag(tagType.content, tagName.content)
+            ref.child(item.name).update({
+                'tags' : item.tags
+            })
             break
 
     await bot.say('Tag Deleted!')
@@ -321,22 +367,29 @@ async def itemlist():
   await bot.say(output[:-2])
 
 
+def cap () :
+    for item in items :
+
+       name = ""
+       for word in item.name.split() :
+           name += word.capitalize() + " "
+
+       item.name = name.strip()
+
+
 @bot.command(pass_context=True)
 async def capitalize(ctx):
     if verified(ctx.message.author.id) :
-        for item in items :
+        cap()
 
-           name = ""
-           for word in item.name.split() :
-               name += word.capitalize() + " "
 
-           item.name = name.strip()
-
+def alpha () :
+    items.sort()
 
 @bot.command(pass_context=True)
 async def alphabetize(ctx):
     if verified(ctx.message.author.id) :
-        items.sort()
+        alpha()
 
 # @bot.command(pass_context=True)
 # async def createKaul(ctx):
