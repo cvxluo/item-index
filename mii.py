@@ -352,8 +352,8 @@ async def listenchantspython(ctx):
   if verified(ctx.message.author.id) :
     print(enchantList)
 
-@bot.command()
-async def itemlist():
+@bot.command(pass_context=True)
+async def itemlist(ctx):
   output = ""
   for item in items :
       if (len(item.name) + len(output) < 2000) :
