@@ -1,2 +1,6 @@
 /__pycache__/
 /env/
+
+# Temporarily remove these credentials- need permanent solution
+credentials.json
+token.pickle

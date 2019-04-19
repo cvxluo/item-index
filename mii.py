@@ -8,6 +8,8 @@ from item import Item
 import datetime
 
 
+from parser import itemsFromSpreadsheet
+
 
 # Firebase initialization and creation of a reference
 
@@ -46,6 +48,57 @@ for name, data in ref.get().items() :
     itemURL = data['imageURL'] if 'imageURL' in data else None
     itemTags = data['tags'] if 'tags' in data else None
     items.append(Item(itemName, itemURL, itemTags))
+
+
+
+@bot.command(pass_context=True)
+async def getFromSpreadsheet(ctx) :
+    if not verified(ctx.message.author.id) :
+        return
+
+    await bot.say("Attempting to get items from spreadsheet")
+
+    spreadsheet = itemsFromSpreadsheet()
+    tagNames = spreadsheet.pop(0)
+    tagNames.pop(4)
+
+    for item in spreadsheet :
+        name = item.pop(4).strip()
+        # TODO: Fix this garbage
+        # Question marks aren't allowed, but there really should be a better way to sanitize strings before storage
+        name = name.replace('.', '')
+        print(name)
+        name = name.split('\n')[0]
+        if ('(' in name) :
+            name = name[:(name.find('(') - 1)]
+            name.strip()
+        tags = {}
+
+        for i in range(len(item)) :
+            if (item[i]) :
+                # TODO:  this is horrific pls make clear
+                tags[tagNames[i]] = item[i].split('\n') #.replace(':', ':\n').replace(',', ',\n') #
+
+        ref.child(name).update({
+            'name' : name,
+            'tags' : tags,
+        })
+        #await bot.say(str(item))
+    await bot.say("Successfully updated from spreadsheet")
+
+
+@bot.command(pass_context=True)
+async def removeAllTags(ctx) :
+    if verified(ctx.message.author.id) :
+        for item in items :
+            ref.child(item.name).set({
+                'name' : item.name,
+                'imageURL' : item.imageURL,
+                'tags' : None,
+            })
+
+    else :
+        await bot.say("You don't have permission!")
 
 
 @bot.command(pass_context=True)
@@ -223,11 +276,11 @@ async def deltag(ctx, *args):
 @bot.command(pass_context=True)
 async def tag(ctx):
 
-    await bot.say('What is the type of tag you are searching for?')
+    await bot.say('What is the type of tag you are searching for? (ex. Tier, Category, Enchantments, etc.)')
     tagTypeM = await bot.wait_for_message(author = ctx.message.author)
     tagType = tagTypeM.content.capitalize()
 
-    await bot.say('What is the tag you are searching for?')
+    await bot.say('What is the tag you are searching for? (ex. Protection 1, Wooden Sword, Armor, Unique, etc.)')
     tagNameM = await bot.wait_for_message(author = ctx.message.author)
     tagName = tagNameM.content.capitalize()
 
@@ -399,102 +452,4 @@ async def alphabetize(ctx):
 
 
 
-
-
 bot.run('NTYxMTQ0ODcxMzk0NzM4MTgx.XJ_CUw.2g2D_HzkLcZesNKz7q9TR2S0Icg')
-
-
-#TRANSFER COMMAND
-# with open ("backup_itemList.txt", "r") as f:
-#   key = None
-#   for i, line in enumerate(f):
-#     if i % 2 == 0:
-#       key = line.strip()
-#     else:
-#       itemList[key] = line.strip()
-#
-#
-# @bot.command(pass_context=True)
-# async def transfer(ctx):
-#
-#     with open('items.txt', 'w') as out_file:
-#         for item in itemList :
-#             data = ""
-#             data += item + " "
-#             data += itemList[item] + " "
-#             data += "\n"
-#
-#             out_file.write(data)
-
-#OLD READFILE (ENCHANT)
-# with open ("backup_enchantList.txt", "r") as f:
-#   key = None
-#   for i, line in enumerate(f):
-#     if i % 2 == 0:
-#       key = line.strip()
-#     else:
-#       enchantList[key] = line.strip()
-
-
-#OLD ADDITEM (ENCHANT)
-# @bot.command(pass_context=True)
-# async def addenchant(ctx):
-#   await bot.say('Type the name of the enchantment you wish to add...')
-#   enchantWait = await bot.wait_for_message(author = ctx.message.author)
-#   tempEName = enchantWait.content.lower()
-#   await bot.say('Paste the link of or upload the photo you wish to add...')
-#   enchantWaitPhoto = await bot.wait_for_message(author = ctx.message.author)
-#   for attachment in enchantWaitPhoto.attachments:
-#       EtempPhoto = attachment.get("url")
-#   tempEPhoto = enchantWaitPhoto.content or EtempPhoto
-#   enchantList[tempEName] = tempEPhoto
-#   await bot.say('Added Enchantment')
-#   print ('Added Enchantment')
-
-#OLD ITEM (ENCHANT)
-# @bot.command(pass_context=True)
-# async def enchant(ctx, *args):
-#   ge = ' '.join(args)
-#   fe = ge.lower()
-#   eme = discord.Embed(title=fe , description="Here's your enchant!", color=1)
-#   print(enchantList.get(fe))
-#   enchantImage = str(enchantList.get(fe))
-#   eme.set_image(url=enchantImage)
-#   await bot.send_message(ctx.message.channel, embed = eme)
-#   print ('Found Enchant')
-
-#OLD DELITEM (ENCHANT)
-# @bot.command(pass_context=True)
-# async def delenchant(ctx):
-#   if ctx.message.author.id == "177848553924722688":
-#     await bot.say('Type the name of the enchant you wish to delete...')
-#     enchantWait = await bot.wait_for_message(author = ctx.message.author)
-#     tempEDelete = enchantWait.content.lower()
-#     del enchantList[tempEDelete]
-#     await bot.say('Enchant Deleted!')
-#     print('Deleted Enchant')
-
-#OLD BACKUP (ENCHANT)
-# @bot.command(pass_context=True)
-# async def enchantbackup(ctx):
-#    if ctx.message.author.id == "177848553924722688":
-#     enchantListItem = list(enchantList.keys())
-#     enchantListPhoto = list(enchantList.values())
-#     with open('backup_enchantList.txt', 'w') as eout_file:
-#         for ei in range(len(enchantListItem)):
-#             eout_string = ""
-#             eout_string += str(enchantListItem[ei])
-#             eout_string += "\n" + str(enchantListPhoto[ei])
-#             eout_string += "\n"
-#             eout_file.write(eout_string)
-#     await bot.say('Backed up enchants!')
-#     print ('Backed up')
-#    else:
-#       await bot.say("You don't have permission to do that.")
-
-#OLD ENCHANT ITEM
-# @bot.command()
-# async def enchantlist():
-#   EinList = enchantList.keys()
-#   EList = ', '.join(EinList)
-#   await bot.say(EList)

@@ -8,6 +8,7 @@ Monumenta Item Index for Discord
     * Backing up all items into a text file
     * Tagging system for items - add, remove, and modify tags
     * Looking up items
+    * Referencing a full item spreadsheet for all items
 * ##### Kaul
     * Add and remove Kaul role
     * Ping system for Kaul fights
@@ -17,9 +18,7 @@ Monumenta Item Index for Discord
 #### TODO
 * ##### Major
     * Better antispam for Kaul - maybe connecting to server?
-    * Parsing Mirror's item index into the bot
     * Referencing the wiki - maybe a helper tool to generate pages?
-    * Database - FIREBASE YEET
 * ##### Backend
     * BST or binary search for items/tags
     * Split Kaul from rest of the bot
@@ -27,3 +26,4 @@ Monumenta Item Index for Discord
 
 #### Bugs
 - [ ] Deletion happens locally but not in database
+- [ ] Finishing getting from spreadsheet crashes the bot despite success
