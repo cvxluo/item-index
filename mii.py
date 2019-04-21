@@ -35,8 +35,6 @@ bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
 
 items = []
 
-enchantList = {}
-
 admins = ["177848553924722688", "140920560610836480"] # Mehaz, Vex
 
 def verified (id) :
@@ -87,20 +85,7 @@ async def getFromSpreadsheet(ctx) :
     await bot.say("Successfully updated from spreadsheet")
 
 
-@bot.command(pass_context=True)
-async def removeAllTags(ctx) :
-    if verified(ctx.message.author.id) :
-        for item in items :
-            ref.child(item.name).set({
-                'name' : item.name,
-                'imageURL' : item.imageURL,
-                'tags' : None,
-            })
-
-    else :
-        await bot.say("You don't have permission!")
-
-
+# Obsolete, Firebase updates should happen automatically
 @bot.command(pass_context=True)
 async def backup(ctx):
     if verified(ctx.message.author.id) :
@@ -156,8 +141,6 @@ async def additem(ctx):
 
     item = Item(itemName, itemPhoto, tags)
     items.append(item)
-    cap()
-    alpha()
 
     ref.child(itemName).set({
         'name' : itemName,
@@ -230,7 +213,6 @@ async def item(ctx, *args):
   print ('Found Item')
 
 
-# THIS DOES NOT WORK RIGHT NOW, MUST MANUALLY DELETE IN DATABASE
 @bot.command(pass_context=True)
 async def delitem(ctx):
   if verified(ctx.message.author.id):
@@ -304,9 +286,7 @@ async def tag(ctx):
 
 
 
-# Kaul Stuff
-# TODO: Move into separate file
-
+# Kaul Commands
 
 @bot.command(pass_context=True)
 async def rank(ctx):
@@ -377,33 +357,14 @@ async def kaulnum(ctx, *args):
     await bot.say(str(count) + " players have the Kaul role")
 
 
-@bot.event
-async def on_ready():
-    print('Logged in as')
-    print(bot.user.name)
+# @bot.event
+# async def on_ready():
+#     print('Logged in as')
+#     print(bot.user.name)
 
 @bot.command()
-async def listening():
-    await bot.say('Listening')
-
-@bot.command(pass_context=True)
-async def hey(ctx):
-  if ctx.message.author.id == "177848553924722688" :
-      await bot.say('Hey Mehaz!')
-  elif ctx.message.author.id == "140920560610836480" :
-      await bot.say('Hey Vex!')
-  else:
-      await bot.say('Imposter!')
-
-@bot.command(pass_context=True)
-async def listitemspython(ctx):
-  if verified(ctx.message.author.id) :
-    print(itemList)
-
-@bot.command(pass_context=True)
-async def listenchantspython(ctx):
-  if verified(ctx.message.author.id) :
-    print(enchantList)
+async def ping():
+    await bot.say('Pong!')
 
 @bot.command(pass_context=True)
 async def itemlist(ctx):
@@ -418,31 +379,6 @@ async def itemlist(ctx):
           output = item.name + ", "
 
   await bot.say(output[:-2])
-
-
-def cap () :
-    for item in items :
-
-       name = ""
-       for word in item.name.split() :
-           name += word.capitalize() + " "
-
-       item.name = name.strip()
-
-
-@bot.command(pass_context=True)
-async def capitalize(ctx):
-    if verified(ctx.message.author.id) :
-        cap()
-
-
-def alpha () :
-    items.sort()
-
-@bot.command(pass_context=True)
-async def alphabetize(ctx):
-    if verified(ctx.message.author.id) :
-        alpha()
 
 # @bot.command(pass_context=True)
 # async def createKaul(ctx):
