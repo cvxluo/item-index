@@ -12,7 +12,6 @@ Monumenta Item Index bot for Discord
 * ##### Kaul
     * Add and remove Kaul role
     * Ping system for Kaul fights
-    * Antispam for Kaul pings, 5 minutes static
 
 
 #### TODO

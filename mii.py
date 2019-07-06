@@ -51,6 +51,26 @@ for name, data in ref.get().items() :
     items.append(Item(itemName, itemURL, itemTags))
 #
 
+
+
+cogs = ['cogs.kaul']
+
+if __name__ == '__main__':
+    for cog in cogs:
+        try:
+            bot.load_extension(cog)
+            print("Successfully loaded " + cog)
+        except Exception as e:
+            print("Failed to load extension " + cog)
+
+
+
+@bot.event
+async def on_ready():
+    print('Bot is listening')
+
+
+
 bot.remove_command("help")
 @bot.command(pass_context=True)
 async def help(ctx, *args) :
@@ -75,7 +95,7 @@ async def help(ctx, *args) :
     """
     ***!rank*** - gives you the Kaul role
     ***!derank*** - removes the Kaul role from you
-    ***!kaultime [time]*** - pings everyone with the Kaul role
+    ***!kaultime [time]*** - pings everyone with the Kaul role - with the time argument, specifies when Kaul will spawn
     """)
 
     em.add_field(name = "**Wiki**", value =
@@ -406,81 +426,6 @@ async def tag(ctx):
     print ('Tag Search')
 
 
-
-# Kaul Commands
-
-@bot.command(pass_context=True)
-async def rank(ctx):
-
-    author = ctx.message.author
-    mention = author.mention
-    server = bot.get_server(MONUMENTA_SERVER_ID)
-    role = discord.utils.get(server.roles, name="Kaul")
-    await bot.add_roles(author, role)
-
-    await bot.say(mention + ", you now have the role for Kaul")
-
-@bot.command(pass_context=True)
-async def derank(ctx):
-
-    author = ctx.message.author
-    mention = author.mention
-    server = bot.get_server(MONUMENTA_SERVER_ID)
-    role = discord.utils.get(server.roles, name="Kaul")
-    await bot.remove_roles(author, role)
-
-    await bot.say(mention + ", you have removed your role for Kaul")
-
-
-
-recentFought = datetime.datetime.now()
-
-@bot.command(pass_context=True)
-async def kaultime(ctx, *args):
-
-    # TODO: remove this janky ass system
-    global recentFought
-
-    author = ctx.message.author.id
-    server = bot.get_server(MONUMENTA_SERVER_ID)
-    role = discord.utils.get(server.roles, name="Kaul")
-    mention = role.mention
-
-    time = datetime.datetime.now()
-    nextTime = recentFought + datetime.timedelta(minutes=5)
-
-    if (time > nextTime) :
-        if (args) :
-            await bot.say(mention + " , Kaul in " + args[0] + " seconds!")
-        else :
-            await bot.say(mention + ", its Kaul time!")
-
-        recentFought = time
-
-    else :
-        wait = nextTime - time
-        minutes = (wait.seconds // 60) % 60
-        seconds = wait.seconds % 60
-        await bot.say("You must wait " + str(minutes) + " minutes and " + str(seconds) + " seconds to ping Kaul again.")
-
-
-@bot.command(pass_context=True)
-async def kaulnum(ctx, *args):
-
-    server = bot.get_server(MONUMENTA_SERVER_ID)
-    role = discord.utils.get(server.roles, name="Kaul")
-
-    count = 0
-    for member in server.members:
-        if (role in member.roles) :
-            count += 1
-
-    await bot.say(str(count) + " players have the Kaul role")
-
-
-@bot.event
-async def on_ready():
-    print('Bot is listening')
 
 @bot.command()
 async def ping():
