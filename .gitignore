@@ -1,6 +1,9 @@
 /__pycache__/
 /env/
+monumenta-item-index-firebase-adminsdk-2vgeu-06804b36e1.json
+Procfile
+bot-token
 
-# Temporarily remove these credentials- need permanent solution
+# Remove these credentials - only use is to update from spreadsheet
 credentials.json
 token.pickle

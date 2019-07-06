@@ -1,5 +1,5 @@
 # item-index
-Monumenta Item Index for Discord
+Monumenta Item Index bot for Discord
 
 #### Features
 * ##### Items
@@ -7,7 +7,8 @@ Monumenta Item Index for Discord
     * Removing items
     * Tagging system for items - add, remove, and modify tags
     * Looking up items
-    * Referencing a full item spreadsheet for all items
+    * Referencing Mirror's Region 1 item spreadsheet
+
 * ##### Kaul
     * Add and remove Kaul role
     * Ping system for Kaul fights
@@ -17,9 +18,15 @@ Monumenta Item Index for Discord
 #### TODO
 * ##### Major
     * Better antispam for Kaul - maybe connecting to server?
-    * Improve wiki integration- maybe use beautifulsoup?
+    * Splitting up functionality into cogs
+    * Implement spellchecker
+
+* ##### Minor
+    * More detailed help commands
+
 * ##### Backend
-    * BST or binary search for items/tags
-    * Merge functions with other bots?
+
 
 #### Bugs
+
+- [ ] Finishing getting from spreadsheet crashes the bot despite success

@@ -12,6 +12,18 @@ from parser import itemsFromSpreadsheet
 import wikia
 
 
+bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
+client = discord.Client()
+MONUMENTA_SERVER_ID = "313066655494438922"
+
+items = []
+
+admins = ["177848553924722688", "140920560610836480"] # Mehaz, Vex
+
+def verified (id) :
+    return id in admins
+
+
 # Firebase initialization and creation of a reference
 
 import firebase_admin
@@ -31,18 +43,6 @@ ref = db.reference('items')
 # print(ref.get())
 
 
-
-bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
-MONUMENTA_SERVER_ID = "313066655494438922"
-
-items = []
-
-admins = ["177848553924722688", "140920560610836480"] # Mehaz, Vex
-
-def verified (id) :
-    return id in admins
-
-
 for name, data in ref.get().items() :
     itemName = data['name'] if 'name' in data else "ERROR"
     itemURL = data['imageURL'] if 'imageURL' in data else None
@@ -51,6 +51,45 @@ for name, data in ref.get().items() :
 
 
 
+bot.remove_command("help")
+@bot.command(pass_context=True)
+async def help(ctx, *args) :
+
+    # TODO : Write more specific command descriptions for each command
+
+    em = discord.Embed(title="**Monumenta Item Index Bot - Command Reference**", color=1)
+
+    em.add_field(name = "**General**", value =
+    """
+    ***!help*** - shows this command
+    """)
+
+    em.add_field(name = "**Items**", value =
+    """
+    ***!item [item name]*** - retrieves an item from the index
+    ***!itemlist*** - retrieves every item from the index
+    ***!tag*** - searches the item index by tag
+    """)
+
+    em.add_field(name = "**Kaul**", value =
+    """
+    ***!rank*** - gives you the Kaul role
+    ***!derank*** - removes the Kaul role from you
+    ***!kaultime [time]*** - pings everyone with the Kaul role
+    """)
+
+    em.add_field(name = "**Wiki**", value =
+    """
+    ***!wiki [wiki page]*** - retrieves a page from the wiki
+    """)
+
+    em.set_footer(text = "Brackets indicate a place for you to put an input (without the brackets)")
+
+    await bot.send_message(ctx.message.channel, embed = em)
+
+
+
+# Wiki integration
 @bot.command(pass_context=True)
 async def wiki(ctx, *args) :
     message = ' '.join(args)
@@ -286,6 +325,51 @@ async def deltag(ctx, *args):
 
 @bot.command(pass_context=True)
 async def tag(ctx):
+    """
+    # 0⃣ 1⃣ 2⃣ 3⃣ 4⃣ 5⃣ 6⃣ 7⃣ 8⃣ 9⃣ 🔟 - emojis for reference
+
+     # TODO: Include Lore?
+    PRESET_TAGS = {'Group': "1⃣", 'Tier' : "2⃣", 'Category' : "3⃣", 'Type of Item' : "4⃣", 'Equip Slot' : "5⃣", 'Enchantments' : "6⃣", 'Bonus Effects' : "7⃣", 'Where to Obtain' : "8⃣"}
+
+    em = discord.Embed(title="Tag Search", color=1)
+
+
+    instructions = ""
+
+    for tag in PRESET_TAGS :
+        instructions += PRESET_TAGS[tag] + " - " + tag + "\n"
+
+    em.add_field(name = "React with the tag you would like to search for!", value = instructions, inline = False)
+
+    instructions_message = await bot.send_message(ctx.message.channel, embed = em)
+
+    for tag in PRESET_TAGS :
+        await client.add_reaction(instructions_message, PRESET_TAGS[tag])
+
+
+
+    def check (reaction, user) :
+        return reaction.message.id == instructions_message.id
+
+
+    try :
+        reaction, user = await client.wait_for('reaction_add', timeout=10.0, check=check)
+
+    except asyncio.TimeoutError :
+        await channel.send("**Timed out :(**")
+
+    else :
+        if reaction.emoji == '\U0001f44d' :
+            cleaner_mode = True
+            await channel.send("**Cleaner mode activated!**")
+
+        else :
+            cleaner_mode = False
+            await channel.send("**Cleaner mode deactivated!**")
+
+
+    """
+
 
     await bot.say('What is the type of tag you are searching for? (ex. Tier, Category, Enchantments, etc.)')
     tagTypeM = await bot.wait_for_message(author = ctx.message.author)
@@ -415,5 +499,5 @@ async def itemlist(ctx):
 
 
 
-
-bot.run('NTYxMTQ0ODcxMzk0NzM4MTgx.XJ_CUw.2g2D_HzkLcZesNKz7q9TR2S0Icg')
+TOKEN = open("bot-token").read().rstrip()
+bot.run(TOKEN)
