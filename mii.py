@@ -9,6 +9,7 @@ import datetime
 
 
 from parser import itemsFromSpreadsheet
+import wikia
 
 
 # Firebase initialization and creation of a reference
@@ -32,6 +33,7 @@ ref = db.reference('items')
 
 
 bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
+MONUMENTA_SERVER_ID = "313066655494438922"
 
 items = []
 
@@ -46,6 +48,33 @@ for name, data in ref.get().items() :
     itemURL = data['imageURL'] if 'imageURL' in data else None
     itemTags = data['tags'] if 'tags' in data else None
     items.append(Item(itemName, itemURL, itemTags))
+
+
+
+@bot.command(pass_context=True)
+async def wiki(ctx, *args) :
+    message = ' '.join(args)
+    try :
+        page = wikia.page("monumentammo", message)
+
+    except :
+        await bot.say("Wiki page not found!")
+
+    else :
+        output = ""
+        content = page.content
+        # TODO: Better formatting for wiki stuff
+        #content.replace('\n', '\n\n')
+
+        while len(content) > 1500 :
+            output = content[:1500]
+            content = content[1500:]
+            await bot.say("```" + output + "```")
+
+        output = content
+        await bot.say("```" + output + "```")
+        await bot.say("Full page at: " + page.url.replace(' ', '_'))
+
 
 
 
@@ -293,7 +322,7 @@ async def rank(ctx):
 
     author = ctx.message.author
     mention = author.mention
-    server = bot.get_server('313066655494438922')
+    server = bot.get_server(MONUMENTA_SERVER_ID)
     role = discord.utils.get(server.roles, name="Kaul")
     await bot.add_roles(author, role)
 
@@ -304,7 +333,7 @@ async def derank(ctx):
 
     author = ctx.message.author
     mention = author.mention
-    server = bot.get_server('313066655494438922')
+    server = bot.get_server(MONUMENTA_SERVER_ID)
     role = discord.utils.get(server.roles, name="Kaul")
     await bot.remove_roles(author, role)
 
@@ -321,7 +350,7 @@ async def kaultime(ctx, *args):
     global recentFought
 
     author = ctx.message.author.id
-    server = bot.get_server('313066655494438922')
+    server = bot.get_server(MONUMENTA_SERVER_ID)
     role = discord.utils.get(server.roles, name="Kaul")
     mention = role.mention
 
@@ -346,7 +375,7 @@ async def kaultime(ctx, *args):
 @bot.command(pass_context=True)
 async def kaulnum(ctx, *args):
 
-    server = bot.get_server('313066655494438922')
+    server = bot.get_server(MONUMENTA_SERVER_ID)
     role = discord.utils.get(server.roles, name="Kaul")
 
     count = 0
@@ -357,10 +386,9 @@ async def kaulnum(ctx, *args):
     await bot.say(str(count) + " players have the Kaul role")
 
 
-# @bot.event
-# async def on_ready():
-#     print('Logged in as')
-#     print(bot.user.name)
+@bot.event
+async def on_ready():
+    print('Bot is listening')
 
 @bot.command()
 async def ping():

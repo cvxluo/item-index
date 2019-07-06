@@ -17,10 +17,9 @@ Monumenta Item Index for Discord
 #### TODO
 * ##### Major
     * Better antispam for Kaul - maybe connecting to server?
-    * Referencing the wiki - maybe a helper tool to generate pages?
+    * Improve wiki integration- maybe use beautifulsoup?
 * ##### Backend
     * BST or binary search for items/tags
     * Merge functions with other bots?
 
 #### Bugs
-- [ ] Finishing getting from spreadsheet crashes the bot despite success
