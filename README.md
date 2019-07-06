@@ -20,6 +20,7 @@ Monumenta Item Index bot for Discord
     * Better antispam for Kaul - maybe connecting to server?
     * Splitting up functionality into cogs
     * Implement spellchecker
+    * Hide security vulnerabilities
 
 * ##### Minor
     * More detailed help commands
