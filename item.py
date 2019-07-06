@@ -35,4 +35,4 @@ class Item (object) :
 
 
     def __str__ (self) :
-        return self.name + " " + self.imageURL
+        return self.name

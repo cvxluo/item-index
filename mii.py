@@ -13,7 +13,6 @@ import wikia
 
 
 bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
-client = discord.Client()
 MONUMENTA_SERVER_ID = "313066655494438922"
 
 items = []
@@ -24,6 +23,8 @@ def verified (id) :
     return id in admins
 
 
+
+# Comment this stuff out during devtime unless needed
 # Firebase initialization and creation of a reference
 
 import firebase_admin
@@ -48,8 +49,7 @@ for name, data in ref.get().items() :
     itemURL = data['imageURL'] if 'imageURL' in data else None
     itemTags = data['tags'] if 'tags' in data else None
     items.append(Item(itemName, itemURL, itemTags))
-
-
+#
 
 bot.remove_command("help")
 @bot.command(pass_context=True)
@@ -325,59 +325,67 @@ async def deltag(ctx, *args):
 
 @bot.command(pass_context=True)
 async def tag(ctx):
-    """
+
     # 0⃣ 1⃣ 2⃣ 3⃣ 4⃣ 5⃣ 6⃣ 7⃣ 8⃣ 9⃣ 🔟 - emojis for reference
 
      # TODO: Include Lore?
-    PRESET_TAGS = {'Group': "1⃣", 'Tier' : "2⃣", 'Category' : "3⃣", 'Type of Item' : "4⃣", 'Equip Slot' : "5⃣", 'Enchantments' : "6⃣", 'Bonus Effects' : "7⃣", 'Where to Obtain' : "8⃣"}
+    PRESET_TAGS = {
+    "1⃣" : 'Group',
+    "2⃣" : 'Tier',
+    "3⃣" :'Category',
+    "4⃣" : 'Type of Item',
+    "5⃣" : 'Equip Slot',
+    "6⃣" : 'Enchantments',
+    "7⃣" : 'Bonus Effects',
+    "8⃣" : 'Where to Obtain',
+    "🅾" : 'Other'
+    }
 
-    em = discord.Embed(title="Tag Search", color=1)
+    em = discord.Embed(title="***Tag Search***", color=1)
 
 
     instructions = ""
 
     for tag in PRESET_TAGS :
-        instructions += PRESET_TAGS[tag] + " - " + tag + "\n"
+        instructions += tag + " - " + PRESET_TAGS[tag] + "\n"
 
     em.add_field(name = "React with the tag you would like to search for!", value = instructions, inline = False)
+    em.set_footer(text = "If you are searching for a tag not listed, react with the O")
 
     instructions_message = await bot.send_message(ctx.message.channel, embed = em)
-
     for tag in PRESET_TAGS :
-        await client.add_reaction(instructions_message, PRESET_TAGS[tag])
+        await bot.add_reaction(instructions_message, tag)
 
+    response = await bot.wait_for_reaction(PRESET_TAGS.keys(), user = ctx.message.author, timeout=10.0, message = instructions_message)
 
+    tagType = ""
 
-    def check (reaction, user) :
-        return reaction.message.id == instructions_message.id
+    if response : # If timeout, response will be None
+        reacted_emoji = response.reaction.emoji
 
-
-    try :
-        reaction, user = await client.wait_for('reaction_add', timeout=10.0, check=check)
-
-    except asyncio.TimeoutError :
-        await channel.send("**Timed out :(**")
-
-    else :
-        if reaction.emoji == '\U0001f44d' :
-            cleaner_mode = True
-            await channel.send("**Cleaner mode activated!**")
+        if reacted_emoji == "🅾" :
+            await bot.say('What is the type of custom tag you are searching for? (ex. Tier, Category, Enchantments, etc.)')
+            tagTypeM = await bot.wait_for_message(author = ctx.message.author)
+            tagType = tagTypeM.content.capitalize()
 
         else :
-            cleaner_mode = False
-            await channel.send("**Cleaner mode deactivated!**")
+            for tag in PRESET_TAGS :
+                if reacted_emoji == tag :
+                    tagType = PRESET_TAGS[reacted_emoji]
+                    await bot.say("**`You are searching in " + tagType + "!`**")
+
+    else :
+        await bot.say("**`Timed out...`**")
+        return
 
 
-    """
 
-
-    await bot.say('What is the type of tag you are searching for? (ex. Tier, Category, Enchantments, etc.)')
-    tagTypeM = await bot.wait_for_message(author = ctx.message.author)
-    tagType = tagTypeM.content.capitalize()
-
-    await bot.say('What is the tag you are searching for? (ex. Protection 1, Wooden Sword, Armor, Unique, etc.)')
+    await bot.say('What is the tag you are searching for? (ex. Protection I, Wooden Sword, Armor, Unique, etc.)')
     tagNameM = await bot.wait_for_message(author = ctx.message.author)
     tagName = tagNameM.content.capitalize()
+
+
+    # TODO : Group items into tag categories so searching is less expensive
 
     taggedItems = []
     for item in items :
