@@ -33,6 +33,7 @@ ref = db.reference('items')
 
 
 bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
+MONUMENTA_SERVER_ID = "313066655494438922"
 
 items = []
 
@@ -321,7 +322,7 @@ async def rank(ctx):
 
     author = ctx.message.author
     mention = author.mention
-    server = bot.get_server('313066655494438922')
+    server = bot.get_server(MONUMENTA_SERVER_ID)
     role = discord.utils.get(server.roles, name="Kaul")
     await bot.add_roles(author, role)
 
@@ -332,7 +333,7 @@ async def derank(ctx):
 
     author = ctx.message.author
     mention = author.mention
-    server = bot.get_server('313066655494438922')
+    server = bot.get_server(MONUMENTA_SERVER_ID)
     role = discord.utils.get(server.roles, name="Kaul")
     await bot.remove_roles(author, role)
 
@@ -349,7 +350,7 @@ async def kaultime(ctx, *args):
     global recentFought
 
     author = ctx.message.author.id
-    server = bot.get_server('313066655494438922')
+    server = bot.get_server(MONUMENTA_SERVER_ID)
     role = discord.utils.get(server.roles, name="Kaul")
     mention = role.mention
 
@@ -374,7 +375,7 @@ async def kaultime(ctx, *args):
 @bot.command(pass_context=True)
 async def kaulnum(ctx, *args):
 
-    server = bot.get_server('313066655494438922')
+    server = bot.get_server(MONUMENTA_SERVER_ID)
     role = discord.utils.get(server.roles, name="Kaul")
 
     count = 0
