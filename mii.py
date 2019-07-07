@@ -4,14 +4,13 @@ from discord.ext import commands
 from discord.ext.commands import Bot
 import time
 
-from item import Item
+from Item import Item
 from Book import Book
 
 import datetime
 
 
 from parser import itemsFromSpreadsheet
-import wikia
 
 
 bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
@@ -54,8 +53,9 @@ for name, data in ref.get().items() :
 #
 
 
+bot.remove_command("help")
 
-cogs = ['cogs.kaul']
+cogs = ['cogs.kaul', 'cogs.help', 'cogs.wiki']
 
 if __name__ == '__main__':
     for cog in cogs:
@@ -63,7 +63,7 @@ if __name__ == '__main__':
             bot.load_extension(cog)
             print("Successfully loaded " + cog)
         except Exception as e:
-            print("Failed to load extension " + cog)
+            print("Failed to load extension " + cog + " because " + str(e))
 
 
 
@@ -74,71 +74,6 @@ async def on_ready():
 @bot.command()
 async def ping():
     await bot.say('Pong!')
-
-
-
-bot.remove_command("help")
-@bot.command(pass_context=True)
-async def help(ctx, *args) :
-
-    # TODO : Write more specific command descriptions for each command
-
-    em = discord.Embed(title="**Monumenta Item Index Bot - Command Reference**", color=1)
-
-    em.add_field(name = "**General**", value =
-    """
-    ***!help*** - shows this command
-    """)
-
-    em.add_field(name = "**Items**", value =
-    """
-    ***!item [item name]*** - retrieves an item from the index
-    ***!itemlist*** - retrieves every item from the index
-    ***!tag*** - searches the item index by tag
-    """)
-
-    em.add_field(name = "**Kaul**", value =
-    """
-    ***!rank*** - gives you the Kaul role
-    ***!derank*** - removes the Kaul role from you
-    ***!kaultime [time]*** - pings everyone with the Kaul role - with the time argument, specifies when Kaul will spawn
-    """)
-
-    em.add_field(name = "**Wiki**", value =
-    """
-    ***!wiki [wiki page]*** - retrieves a page from the wiki
-    """)
-
-    em.set_footer(text = "Brackets indicate a place for you to put an input (without the brackets)")
-
-    await bot.send_message(ctx.message.channel, embed = em)
-
-
-
-# Wiki integration
-@bot.command(pass_context=True)
-async def wiki(ctx, *args) :
-    message = ' '.join(args)
-    try :
-        page = wikia.page("monumentammo", message)
-
-    except :
-        await bot.say("Wiki page not found!")
-
-    else :
-        output = ""
-        content = page.content
-        # TODO: Better formatting for wiki stuff
-        #content.replace('\n', '\n\n')
-
-        while len(content) > 1500 :
-            output = content[:1500]
-            content = content[1500:]
-            await bot.say("```" + output + "```")
-
-        output = content
-        await bot.say("```" + output + "```")
-        await bot.say("Full page at: " + page.url.replace(' ', '_'))
 
 
 
@@ -418,16 +353,53 @@ async def tag(ctx):
         if tagType in item.tags.keys() and tagName in item.tags[tagType] :
             taggedItems.append(item.name)
 
-    output = ""
-    if len(taggedItems) > 0 :
-        output += "Items with " + tagName + ":\n"
-        for itemName in taggedItems :
-            output += itemName + "\n"
+    # Temporary solution to convert to book system
+    if not taggedItems :
+        taggedItems.append("\a")
+
+    tag_chapters = { tagName : taggedItems }
+
+    tag_book = Book(tag_chapters, title = "***Tagged Items***", description = "**" + tagType + "**", per_page = 20)
+    em = tag_book.get_current_page()
+    book_message = await bot.send_message(ctx.message.channel, embed = em)
+
+    OPTIONS = [
+        '\U000023ea', # Reverse
+        '\U00002b05', # Left Arrow
+        '\U000027a1', # Right Arrow
+        '\U000023e9', # Fast Forward
+    ]
+
+    for option in OPTIONS :
+        await bot.add_reaction(book_message, option)
+
+
+    response = await bot.wait_for_reaction(OPTIONS, user = ctx.message.author, timeout=10.0, message = book_message)
+
+    while response :
+        reacted_emoji = response.reaction.emoji
+
+        if reacted_emoji == '\U00002b05' :
+            tag_book.one_page_backward()
+
+        elif reacted_emoji == '\U000027a1' :
+            tag_book.one_page_forward()
+
+        elif reacted_emoji == '\U000023ea' :
+            tag_book.page_backward(5)
+
+        elif reacted_emoji == '\U000023e9' :
+            tag_book.page_forward(5)
+
+
+        new_embed = tag_book.get_current_page()
+        await bot.edit_message(book_message, embed = new_embed)
+        response = await bot.wait_for_reaction(OPTIONS, user = ctx.message.author, timeout=10.0, message = book_message)
+
 
     else :
-        output += "No items found with that tag"
+        await bot.clear_reactions(book_message)
 
-    await bot.say(output)
 
     print ('Tag Search')
 
@@ -484,11 +456,6 @@ async def itemlist(ctx) :
 
     else :
         await bot.clear_reactions(book_message)
-
-# @bot.command(pass_context=True)
-# async def createKaul(ctx):
-#     if verified(ctx.message.author.id) :
-#         await bot.create_role(ctx.message.server, name = "Kaul", permissions = discord.Permissions.none(), colour = discord.Colour.darker_grey(), hoist = False, mentionable = True)
 
 
 

@@ -17,9 +17,9 @@ Monumenta Item Index bot for Discord
 #### TODO
 * ##### Major
     * Better antispam for Kaul - maybe connecting to server?
-    * Splitting up functionality into cogs
     * Implement spellchecker
     * Hide security vulnerabilities
+    * Support multiple tag searching
 
 * ##### Minor
     * More detailed help commands
@@ -30,3 +30,4 @@ Monumenta Item Index bot for Discord
 #### Bugs
 
 - [ ] Finishing getting from spreadsheet crashes the bot despite success
+- [ ] Book has issues with improper formatting and indexing

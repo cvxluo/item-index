@@ -32,6 +32,7 @@ class Book (object) :
 
 
 
+    # TODO: currently crashes in edge cases at the end of the book because of indexing issues - fix
     def get_current_page(self) :
         embed = discord.Embed(title=self.title, description=self.description, color=self.color)
 
