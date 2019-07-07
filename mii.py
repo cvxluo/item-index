@@ -7,8 +7,6 @@ import time
 from Item import Item
 from Book import Book
 
-import datetime
-
 
 from parser import itemsFromSpreadsheet
 
@@ -22,7 +20,6 @@ admins = ["177848553924722688", "140920560610836480"] # Mehaz, Vex
 
 def verified (id) :
     return id in admins
-
 
 
 # Comment this stuff out during devtime unless needed
@@ -55,7 +52,7 @@ for name, data in ref.get().items() :
 
 bot.remove_command("help")
 
-cogs = ['cogs.kaul', 'cogs.help', 'cogs.wiki']
+cogs = ['cogs.kaul', 'cogs.help', 'cogs.wiki', 'cogs.trade']
 
 if __name__ == '__main__':
     for cog in cogs:

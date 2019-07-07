@@ -57,7 +57,7 @@ class Book (object) :
 
                 # Index is now in the chapter
                 start = start_display - index if start_display - index > 0 else 0
-                end = end_display - index if end_display - index < len(chapter_content) else len(chapter_content) - 1
+                end = end_display - index if end_display - index < len(chapter_content) else len(chapter_content)
 
 
                 for i in range(start, end) :
