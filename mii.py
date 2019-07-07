@@ -3,7 +3,9 @@ import asyncio
 from discord.ext import commands
 from discord.ext.commands import Bot
 import time
+
 from item import Item
+from Book import Book
 
 import datetime
 
@@ -68,6 +70,10 @@ if __name__ == '__main__':
 @bot.event
 async def on_ready():
     print('Bot is listening')
+
+@bot.command()
+async def ping():
+    await bot.say('Pong!')
 
 
 
@@ -426,24 +432,58 @@ async def tag(ctx):
     print ('Tag Search')
 
 
-
-@bot.command()
-async def ping():
-    await bot.say('Pong!')
-
 @bot.command(pass_context=True)
-async def itemlist(ctx):
-  output = ""
-  for item in items :
-      if (len(item.name) + len(output) < 2000) :
-          output += item.name
-          output += ", "
+async def itemlist(ctx) :
 
-      else :
-          await bot.say(output[:-2])
-          output = item.name + ", "
+    items.sort()
+    chapters = {}
+    for i in range(65, 91) :
+        chapters[chr(i)] = []
+    chapters['c'] = []
 
-  await bot.say(output[:-2])
+    for item in items :
+        chapters[item.name[0]].append(item)
+
+    item_book = Book(chapters, title = "**Item List**", description = "**Hit the reaction buttons to go forwards or backwards!**", per_page = 20)
+    em = item_book.get_current_page()
+    book_message = await bot.send_message(ctx.message.channel, embed = em)
+
+    OPTIONS = [
+        '\U000023ea', # Reverse
+        '\U00002b05', # Left Arrow
+        '\U000027a1', # Right Arrow
+        '\U000023e9', # Fast Forward
+    ]
+
+    for option in OPTIONS :
+        await bot.add_reaction(book_message, option)
+
+
+    response = await bot.wait_for_reaction(OPTIONS, user = ctx.message.author, timeout=10.0, message = book_message)
+
+    while response :
+        reacted_emoji = response.reaction.emoji
+
+        if reacted_emoji == '\U00002b05' :
+            item_book.one_page_backward()
+
+        elif reacted_emoji == '\U000027a1' :
+            item_book.one_page_forward()
+
+        elif reacted_emoji == '\U000023ea' :
+            item_book.page_backward(5)
+
+        elif reacted_emoji == '\U000023e9' :
+            item_book.page_forward(5)
+
+
+        new_embed = item_book.get_current_page()
+        await bot.edit_message(book_message, embed = new_embed)
+        response = await bot.wait_for_reaction(OPTIONS, user = ctx.message.author, timeout=10.0, message = book_message)
+
+
+    else :
+        await bot.clear_reactions(book_message)
 
 # @bot.command(pass_context=True)
 # async def createKaul(ctx):
