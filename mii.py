@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord.ext.commands import Bot
 import time
 
-from Item import Item
+from item import Item
 from Book import Book
 
 

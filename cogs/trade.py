@@ -1,8 +1,10 @@
 import discord
 from discord.ext import commands
 
-
-from Item import Item
+# TODO : refactor so sys isn't needed
+import sys
+sys.path.append('../')
+from item import Item
 from Book import Book
 
 import datetime
