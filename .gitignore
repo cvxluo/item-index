@@ -1,6 +1,2 @@
 __pycache__/
 env/
-
-# Remove these credentials - only use is to update from spreadsheet
-credentials.json
-token.pickle

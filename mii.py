@@ -2,13 +2,12 @@ import discord
 import asyncio
 from discord.ext import commands
 from discord.ext.commands import Bot
+from datetime import datetime
 import time
 
 from item import Item
 from Book import Book
 
-
-from parser import itemsFromSpreadsheet
 
 
 bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
@@ -47,26 +46,25 @@ for name, data in ref.get().items() :
     itemURL = data['imageURL'] if 'imageURL' in data else None
     itemTags = data['tags'] if 'tags' in data else None
     items.append(Item(itemName, itemURL, itemTags))
-#
 
 
 bot.remove_command("help")
 
 cogs = ['cogs.kaul', 'cogs.help', 'cogs.wiki', 'cogs.trade']
 
-if __name__ == '__main__':
-    for cog in cogs:
-        try:
-            bot.load_extension(cog)
-            print("Successfully loaded " + cog)
-        except Exception as e:
-            print("Failed to load extension " + cog + " because " + str(e))
+for cog in cogs:
+    try:
+        bot.load_extension(cog)
+        print("Successfully loaded " + cog)
+    except Exception as e:
+        print("Failed to load extension " + cog + " because " + str(e))
 
 
 
 @bot.event
 async def on_ready():
-    print('Bot is listening')
+    print('Bot is listening!')
+    print('Woke up at ' + datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 
 @bot.command()
 async def ping():
@@ -74,68 +72,13 @@ async def ping():
 
 
 
-
-@bot.command(pass_context=True)
-async def getFromSpreadsheet(ctx) :
-    if not verified(ctx.message.author.id) :
-        return
-
-    await bot.say("Attempting to get items from spreadsheet")
-
-    spreadsheet = itemsFromSpreadsheet()
-    tagNames = spreadsheet.pop(0)
-    tagNames.pop(4)
-
-    for item in spreadsheet :
-        name = item.pop(4).strip()
-        # TODO: Fix this garbage
-        # Question marks aren't allowed, but there really should be a better way to sanitize strings before storage
-        name = name.replace('.', '')
-        print(name)
-        name = name.split('\n')[0]
-        if ('(' in name) :
-            name = name[:(name.find('(') - 1)]
-            name.strip()
-        tags = {}
-
-        for i in range(len(item)) :
-            if (item[i]) :
-                # TODO:  this is horrific pls make clear
-                tags[tagNames[i]] = item[i].split('\n') #.replace(':', ':\n').replace(',', ',\n') #
-
-        ref.child(name).update({
-            'name' : name,
-            'tags' : tags,
-        })
-        #await bot.say(str(item))
-    await bot.say("Successfully updated from spreadsheet")
-
-
-# Obsolete, Firebase updates should happen automatically
-@bot.command(pass_context=True)
-async def backup(ctx):
-    if verified(ctx.message.author.id) :
-
-        for item in items :
-            ref.child(item.name).set({
-                'name' : item.name,
-                'imageURL' : item.imageURL,
-                'tags' : item.tags
-            })
-
-        await bot.say('Backed up items to Firebase')
-        print ('Backed up items')
-    else:
-      await bot.say("You don't have permission to do that.")
-
-
 @bot.command(pass_context=True)
 async def additem(ctx):
-    await bot.say('What is the item NAME?')
+    await bot.say('** What is the item NAME? **')
     itemWait = await bot.wait_for_message(author = ctx.message.author)
     itemName = itemWait.content
 
-    await bot.say("What is the IMAGE for the item? (If you don't have an image, type 'none')")
+    await bot.say("** What is the IMAGE for the item? (If you don't have an image, type 'none') **")
     itemWaitPhoto = await bot.wait_for_message(author = ctx.message.author)
     itemPhoto = ""
     if (itemWaitPhoto.content != 'none' or itemWaitPhoto.attachments) :
@@ -148,20 +91,20 @@ async def additem(ctx):
     # TODO: This logic is super convoluted for a simple task, please fix
 
     tags = {}
-    await bot.say("Does this item have tags? (If you don't have any tags, or if you're done, type 'done')")
+    await bot.say("** Does this item have tags? (If you don't have any tags, or if you're done, type 'done') **")
     tagMessage = await bot.wait_for_message(author = ctx.message.author)
     if (tagMessage.content != 'done') :
-        await bot.say("What is the type of tag you want to add? (ex. Enchantments, Location, etc.)")
+        await bot.say("** What is the type of tag you want to add? (ex. Enchantments, Location, etc.) **")
         tagType = await bot.wait_for_message(author = ctx.message.author)
-        await bot.say("What is the tag you would like to add? (ex. Protection 2, Halls of Wind and Blood)")
+        await bot.say("** What is the tag you would like to add? (ex. Protection 2, Halls of Wind and Blood) **")
         tagName = await bot.wait_for_message(author = ctx.message.author)
 
         while (tagName.content != 'done') :
             tags[tagType.content] = tagName.message.content
-            await bot.say("If you have additional tags, please enter them one at a time. Otherwise, type 'done'.")
+            await bot.say("** If you have additional tags, please enter them one at a time. Otherwise, type 'done'. **")
             tagName = await bot.wait_for_message(author = ctx.message.author)
 
-        await bot.say("Does this item have more tags? (If you don't have any more tags, or if you're done, type 'done')")
+        await bot.say("** Does this item have more tags? (If you don't have any more tags, or if you're done, type 'done') **")
         tagMessage = await bot.wait_for_message(author = ctx.message.author)
 
 
@@ -181,15 +124,15 @@ async def additem(ctx):
 
 @bot.command(pass_context=True)
 async def addtag(ctx):
-    await bot.say('What item would you like to tag?')
+    await bot.say('** What item would you like to tag? **')
     toTag = await bot.wait_for_message(author = ctx.message.author)
     itemSearch = toTag.content.lower().replace("'", "")
 
 
-    await bot.say('What is the type of tag you are adding?')
+    await bot.say('** What is the type of tag you are adding? **')
     tagType = await bot.wait_for_message(author = ctx.message.author)
 
-    await bot.say('What tag would you like to add?')
+    await bot.say('** What tag would you like to add? **')
     tag = await bot.wait_for_message(author = ctx.message.author)
 
     capWords = []
@@ -206,7 +149,7 @@ async def addtag(ctx):
 
 
     await bot.say('Added ' + tag.content + ' to ' + toTag.content)
-    print ('Added Tag')
+    print ('Added Tag!')
 
 
 
@@ -233,7 +176,7 @@ async def item(ctx, *args):
           break
 
   if not found :
-      await bot.say("Item not found")
+      await bot.say("** Item not found **")
 
 
   print ('Found Item')
@@ -242,7 +185,7 @@ async def item(ctx, *args):
 @bot.command(pass_context=True)
 async def delitem(ctx):
   if verified(ctx.message.author.id):
-    await bot.say('What item would you like to delete?')
+    await bot.say('** What item would you like to delete? **')
     itemWait = await bot.wait_for_message(author = ctx.message.author)
     itemSearch = itemWait.content.lower().replace("'", "")
 
@@ -252,20 +195,20 @@ async def delitem(ctx):
             ref.child(items[i].name).delete()
             break
 
-    await bot.say('Item Deleted!')
+    await bot.say('** Item Deleted! **')
     print('Deleted Item')
 
 
 @bot.command(pass_context=True)
 async def deltag(ctx, *args):
-    await bot.say('Type the name of the item...')
+    await bot.say('** Type the name of the item... **')
     itemWait = await bot.wait_for_message(author = ctx.message.author)
     itemSearch = itemWait.content.lower().replace("'", "")
 
-    await bot.say('Type the type of tag...')
+    await bot.say('** Type the type of tag... **')
     tagType = await bot.wait_for_message(author = ctx.message.author)
 
-    await bot.say('Type the tag name...')
+    await bot.say('** Type the tag name... **')
     tagName = await bot.wait_for_message(author = ctx.message.author)
 
     for item in items :
@@ -276,7 +219,7 @@ async def deltag(ctx, *args):
             })
             break
 
-    await bot.say('Tag Deleted!')
+    await bot.say('** Tag Deleted! **')
 
     print('Deleted Item')
 
