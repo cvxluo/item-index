@@ -53,6 +53,20 @@ class Help:
         await self.bot.send_message(ctx.message.channel, embed = em)
 
 
+    @commands.command(pass_context=True)
+    async def changelog(self, ctx) :
+
+        # TODO: finish this when rewrite is done
+
+        em = discord.Embed(title="**Monumenta Item Index Bot**", color=1)
+        em.add_field(name = "**Changelog**", value =
+        """
+        """)
+
+
+        await self.bot.send_message(ctx.message.channel, embed = em)
+
+
 
 
 

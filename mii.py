@@ -13,13 +13,13 @@ from Book import Book
 bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
 MONUMENTA_SERVER_ID = "313066655494438922"
 
-items = []
-
 admins = ["177848553924722688", "140920560610836480"] # Mehaz, Vex
 
 def verified (id) :
     return id in admins
 
+
+items = []
 
 # Comment this stuff out during devtime unless needed
 # Firebase initialization and creation of a reference
@@ -64,7 +64,7 @@ for cog in cogs:
 @bot.event
 async def on_ready():
     print('Bot is listening!')
-    print('Woke up at ' + datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+    print('Woke up at ' + datetime.now().strftime("%m/%d/%Y %H:%M:%S"))
 
 @bot.command()
 async def ping():
