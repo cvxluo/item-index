@@ -26,31 +26,57 @@ items = []
 
 import firebase_admin
 from firebase_admin import credentials
-from firebase_admin import db
+from firebase_admin import firestore
+from firebase_admin import storage
 
 # Fetch the service account key JSON file contents
 cred = credentials.Certificate('monumenta-item-index-firebase-adminsdk-2vgeu-06804b36e1.json')
 
 # Initialize the app with a service account, granting admin privileges
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://monumenta-item-index.firebaseio.com/'
+    'databaseURL': 'https://monumenta-item-index.firebaseio.com/',
+    'storageBucket': 'monumenta-item-index.appspot.com'
 })
 
+db = firestore.client()
+bucket = storage.bucket()
+
 # As an admin, the app has access to read and write all data, regradless of Security Rules
-ref = db.reference('items')
+ref = db.collection('items')
 # print(ref.get())
 
+retrieved_items = ref.stream()
 
-for name, data in ref.get().items() :
-    itemName = data['name'] if 'name' in data else "ERROR"
-    itemURL = data['imageURL'] if 'imageURL' in data else None
+for doc in retrieved_items :
+    data = doc.to_dict()
+    itemName = data['name']
+    # itemURL = data['imageURL'] if 'imageURL' in data else None
+    # TODO: Rework this - probably a hasImage attribute in each item
+    print(itemName)
+    itemURL = ''
+    itemBlob = bucket.get_blob('item-images/' + itemName)
+    if itemBlob :
+        '''
+        print("PATH:", itemBlob.path)
+        print("PUBLIC URL", itemBlob.public_url)
+        print("MEDIA LINK", itemBlob.media_link)
+        print("SELF LINK", itemBlob.self_link)
+        print("METADATA", itemBlob.metadata)
+        metadata = itemBlob.metadata
+        # itemURL = itemBlob.media_link + '&token=' + metadata['firebaseStorageDownloadTokens']
+        '''
+        # TODO: Rework this as well - janky url construction
+        itemURL = 'https://firebasestorage.googleapis.com/v0/b/monumenta-item-index.appspot.com/o/item-images%2F' + itemName.replace(' ', '%20') + '?alt=media' + '&token=' + metadata['firebaseStorageDownloadTokens']
+
+
     itemTags = data['tags'] if 'tags' in data else None
+    # print(itemTags)
     items.append(Item(itemName, itemURL, itemTags))
 
 
 bot.remove_command("help")
 
-cogs = ['cogs.kaul', 'cogs.help', 'cogs.wiki', 'cogs.trade']
+cogs = ['cogs.kaul', 'cogs.help', 'cogs.wiki']
 
 for cog in cogs:
     try:
@@ -71,157 +97,35 @@ async def ping():
     await bot.say('Pong!')
 
 
-
-@bot.command(pass_context=True)
-async def additem(ctx):
-    await bot.say('** What is the item NAME? **')
-    itemWait = await bot.wait_for_message(author = ctx.message.author)
-    itemName = itemWait.content
-
-    await bot.say("** What is the IMAGE for the item? (If you don't have an image, type 'none') **")
-    itemWaitPhoto = await bot.wait_for_message(author = ctx.message.author)
-    itemPhoto = ""
-    if (itemWaitPhoto.content != 'none' or itemWaitPhoto.attachments) :
-        for attachment in itemWaitPhoto.attachments:
-            tempPhoto = attachment.get("url")
-
-        itemPhoto = itemWaitPhoto.content or tempPhoto
-
-
-    # TODO: This logic is super convoluted for a simple task, please fix
-
-    tags = {}
-    await bot.say("** Does this item have tags? (If you don't have any tags, or if you're done, type 'done') **")
-    tagMessage = await bot.wait_for_message(author = ctx.message.author)
-    if (tagMessage.content != 'done') :
-        await bot.say("** What is the type of tag you want to add? (ex. Enchantments, Location, etc.) **")
-        tagType = await bot.wait_for_message(author = ctx.message.author)
-        await bot.say("** What is the tag you would like to add? (ex. Protection 2, Halls of Wind and Blood) **")
-        tagName = await bot.wait_for_message(author = ctx.message.author)
-
-        while (tagName.content != 'done') :
-            tags[tagType.content] = tagName.message.content
-            await bot.say("** If you have additional tags, please enter them one at a time. Otherwise, type 'done'. **")
-            tagName = await bot.wait_for_message(author = ctx.message.author)
-
-        await bot.say("** Does this item have more tags? (If you don't have any more tags, or if you're done, type 'done') **")
-        tagMessage = await bot.wait_for_message(author = ctx.message.author)
-
-
-    item = Item(itemName, itemPhoto, tags)
-    items.append(item)
-
-    ref.child(itemName).set({
-        'name' : itemName,
-        'imageURL' : itemPhoto,
-        'tags' : tags
-    })
-
-
-    await bot.say('Added Item ' + itemWait.content)
-    print ('Added Item')
-
-
-@bot.command(pass_context=True)
-async def addtag(ctx):
-    await bot.say('** What item would you like to tag? **')
-    toTag = await bot.wait_for_message(author = ctx.message.author)
-    itemSearch = toTag.content.lower().replace("'", "")
-
-
-    await bot.say('** What is the type of tag you are adding? **')
-    tagType = await bot.wait_for_message(author = ctx.message.author)
-
-    await bot.say('** What tag would you like to add? **')
-    tag = await bot.wait_for_message(author = ctx.message.author)
-
-    capWords = []
-    for word in tag.content.split() :
-        capWords.append(word.capitalize())
-
-    for item in items :
-        if (itemSearch == item.getSearchTerm()) :
-            item.addTag(tagType.content.capitalize(), ' '.join(capWords))
-            ref.child(item.name).update({
-                'tags' : item.tags
-            })
-            break
-
-
-    await bot.say('Added ' + tag.content + ' to ' + toTag.content)
-    print ('Added Tag!')
-
-
-
 @bot.command(pass_context=True)
 async def item(ctx, *args):
-  itemSearch = ' '.join(args).lower().replace("'", "")
+    itemSearch = ' '.join(args).lower().replace("'", "")
 
-  found = False
-  for item in items :
-      if (itemSearch == item.getSearchTerm()) :
-          em = discord.Embed(title=item.name, color=1)
-
-          for tagType, aTags in item.tags.items() :
-
-              tag = ', '.join(aTags)
-              em.add_field(name = tagType, value = tag, inline = False)
-
-          if (item.imageURL) :
-              itemImage = str(item.imageURL)
-              em.set_image(url=itemImage)
-
-          await bot.send_message(ctx.message.channel, embed = em)
-          found = True
-          break
-
-  if not found :
-      await bot.say("** Item not found **")
-
-
-  print ('Found Item')
-
-
-@bot.command(pass_context=True)
-async def delitem(ctx):
-  if verified(ctx.message.author.id):
-    await bot.say('** What item would you like to delete? **')
-    itemWait = await bot.wait_for_message(author = ctx.message.author)
-    itemSearch = itemWait.content.lower().replace("'", "")
-
-    for i in range(len(items)) :
-        if (itemSearch == items[i].getSearchTerm()) :
-            del items[i]
-            ref.child(items[i].name).delete()
-            break
-
-    await bot.say('** Item Deleted! **')
-    print('Deleted Item')
-
-
-@bot.command(pass_context=True)
-async def deltag(ctx, *args):
-    await bot.say('** Type the name of the item... **')
-    itemWait = await bot.wait_for_message(author = ctx.message.author)
-    itemSearch = itemWait.content.lower().replace("'", "")
-
-    await bot.say('** Type the type of tag... **')
-    tagType = await bot.wait_for_message(author = ctx.message.author)
-
-    await bot.say('** Type the tag name... **')
-    tagName = await bot.wait_for_message(author = ctx.message.author)
-
+    found = False
     for item in items :
         if (itemSearch == item.getSearchTerm()) :
-            item.deleteTag(tagType.content, tagName.content)
-            ref.child(item.name).update({
-                'tags' : item.tags
-            })
+            em = discord.Embed(title=item.name, color=1)
+
+            for tagType, aTags in item.tags.items() :
+
+                em.add_field(name = tagType, value = aTags, inline = False)
+
+            print(item.imageURL)
+            if (item.imageURL) :
+                itemImage = str(item.imageURL)
+                print("ITEMIMAGE:", itemImage)
+                em.set_image(url=itemImage)
+
+
+            await bot.send_message(ctx.message.channel, embed = em)
+            found = True
             break
 
-    await bot.say('** Tag Deleted! **')
+    if not found :
+        await bot.say("** Item not found **")
 
-    print('Deleted Item')
+
+    print ('Found Item')
 
 
 @bot.command(pass_context=True)
