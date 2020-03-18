@@ -2,19 +2,16 @@ import discord
 import asyncio
 from discord.ext import commands
 from discord.ext.commands import Bot
+from datetime import datetime
 import time
 
 from item import Item
 from Book import Book
 
 
-from parser import itemsFromSpreadsheet
-
 
 bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
 MONUMENTA_SERVER_ID = "313066655494438922"
-
-items = []
 
 admins = ["177848553924722688", "140920560610836480"] # Mehaz, Vex
 
@@ -22,263 +19,148 @@ def verified (id) :
     return id in admins
 
 
+from algoliasearch.search_client import SearchClient
+
+client = SearchClient.create('YLEE8RLU7T', '2b4b8e994594989ddcd0a8752e213672')
+algolia_index = client.init_index('monumenta-item-index')
+
+
+
+items = []
+
 # Comment this stuff out during devtime unless needed
 # Firebase initialization and creation of a reference
 
 import firebase_admin
 from firebase_admin import credentials
-from firebase_admin import db
+from firebase_admin import firestore
+from firebase_admin import storage
 
 # Fetch the service account key JSON file contents
 cred = credentials.Certificate('monumenta-item-index-firebase-adminsdk-2vgeu-06804b36e1.json')
 
 # Initialize the app with a service account, granting admin privileges
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://monumenta-item-index.firebaseio.com/'
+    'databaseURL': 'https://monumenta-item-index.firebaseio.com/',
+    'storageBucket': 'monumenta-item-index.appspot.com'
 })
 
+db = firestore.client()
+bucket = storage.bucket()
+
 # As an admin, the app has access to read and write all data, regradless of Security Rules
-ref = db.reference('items')
+ref = db.collection('items')
 # print(ref.get())
 
+retrieved_items = ref.stream()
 
-for name, data in ref.get().items() :
-    itemName = data['name'] if 'name' in data else "ERROR"
-    itemURL = data['imageURL'] if 'imageURL' in data else None
+
+print("Loading items...")
+for doc in retrieved_items :
+    data = doc.to_dict()
+    itemName = data['name']
+    # itemURL = data['imageURL'] if 'imageURL' in data else None
+    # TODO: Rework this - probably a hasImage attribute in each item
+    itemURL = ''
+    itemBlob = bucket.get_blob('item-images/' + itemName)
+    if itemBlob :
+        '''
+        print("PATH:", itemBlob.path)
+        print("PUBLIC URL", itemBlob.public_url)
+        print("MEDIA LINK", itemBlob.media_link)
+        print("SELF LINK", itemBlob.self_link)
+        print("METADATA", itemBlob.metadata)
+        # itemURL = itemBlob.media_link + '&token=' + metadata['firebaseStorageDownloadTokens']
+        '''
+        metadata = itemBlob.metadata
+        # TODO: Rework this as well - janky url construction
+        itemURL = 'https://firebasestorage.googleapis.com/v0/b/monumenta-item-index.appspot.com/o/item-images%2F' + itemName.replace(' ', '%20') + '?alt=media' + '&token=' + metadata['firebaseStorageDownloadTokens']
+
+
     itemTags = data['tags'] if 'tags' in data else None
+    # print(itemTags)
     items.append(Item(itemName, itemURL, itemTags))
-#
+
+print("Done loading!")
 
 
 bot.remove_command("help")
 
-cogs = ['cogs.kaul', 'cogs.help', 'cogs.wiki', 'cogs.trade']
+cogs = ['cogs.kaul', 'cogs.help', 'cogs.wiki']
 
-if __name__ == '__main__':
-    for cog in cogs:
-        try:
-            bot.load_extension(cog)
-            print("Successfully loaded " + cog)
-        except Exception as e:
-            print("Failed to load extension " + cog + " because " + str(e))
+for cog in cogs:
+    try:
+        bot.load_extension(cog)
+        print("Successfully loaded " + cog)
+    except Exception as e:
+        print("Failed to load extension " + cog + " because " + str(e))
 
 
 
 @bot.event
 async def on_ready():
-    print('Bot is listening')
+    print('Bot is listening!')
+    print('Woke up at ' + datetime.now().strftime("%m/%d/%Y %H:%M:%S"))
 
 @bot.command()
 async def ping():
     await bot.say('Pong!')
 
 
-
-
-@bot.command(pass_context=True)
-async def getFromSpreadsheet(ctx) :
-    if not verified(ctx.message.author.id) :
-        return
-
-    await bot.say("Attempting to get items from spreadsheet")
-
-    spreadsheet = itemsFromSpreadsheet()
-    tagNames = spreadsheet.pop(0)
-    tagNames.pop(4)
-
-    for item in spreadsheet :
-        name = item.pop(4).strip()
-        # TODO: Fix this garbage
-        # Question marks aren't allowed, but there really should be a better way to sanitize strings before storage
-        name = name.replace('.', '')
-        print(name)
-        name = name.split('\n')[0]
-        if ('(' in name) :
-            name = name[:(name.find('(') - 1)]
-            name.strip()
-        tags = {}
-
-        for i in range(len(item)) :
-            if (item[i]) :
-                # TODO:  this is horrific pls make clear
-                tags[tagNames[i]] = item[i].split('\n') #.replace(':', ':\n').replace(',', ',\n') #
-
-        ref.child(name).update({
-            'name' : name,
-            'tags' : tags,
-        })
-        #await bot.say(str(item))
-    await bot.say("Successfully updated from spreadsheet")
-
-
-# Obsolete, Firebase updates should happen automatically
-@bot.command(pass_context=True)
-async def backup(ctx):
-    if verified(ctx.message.author.id) :
-
-        for item in items :
-            ref.child(item.name).set({
-                'name' : item.name,
-                'imageURL' : item.imageURL,
-                'tags' : item.tags
-            })
-
-        await bot.say('Backed up items to Firebase')
-        print ('Backed up items')
-    else:
-      await bot.say("You don't have permission to do that.")
-
-
-@bot.command(pass_context=True)
-async def additem(ctx):
-    await bot.say('What is the item NAME?')
-    itemWait = await bot.wait_for_message(author = ctx.message.author)
-    itemName = itemWait.content
-
-    await bot.say("What is the IMAGE for the item? (If you don't have an image, type 'none')")
-    itemWaitPhoto = await bot.wait_for_message(author = ctx.message.author)
-    itemPhoto = ""
-    if (itemWaitPhoto.content != 'none' or itemWaitPhoto.attachments) :
-        for attachment in itemWaitPhoto.attachments:
-            tempPhoto = attachment.get("url")
-
-        itemPhoto = itemWaitPhoto.content or tempPhoto
-
-
-    # TODO: This logic is super convoluted for a simple task, please fix
-
-    tags = {}
-    await bot.say("Does this item have tags? (If you don't have any tags, or if you're done, type 'done')")
-    tagMessage = await bot.wait_for_message(author = ctx.message.author)
-    if (tagMessage.content != 'done') :
-        await bot.say("What is the type of tag you want to add? (ex. Enchantments, Location, etc.)")
-        tagType = await bot.wait_for_message(author = ctx.message.author)
-        await bot.say("What is the tag you would like to add? (ex. Protection 2, Halls of Wind and Blood)")
-        tagName = await bot.wait_for_message(author = ctx.message.author)
-
-        while (tagName.content != 'done') :
-            tags[tagType.content] = tagName.message.content
-            await bot.say("If you have additional tags, please enter them one at a time. Otherwise, type 'done'.")
-            tagName = await bot.wait_for_message(author = ctx.message.author)
-
-        await bot.say("Does this item have more tags? (If you don't have any more tags, or if you're done, type 'done')")
-        tagMessage = await bot.wait_for_message(author = ctx.message.author)
-
-
-    item = Item(itemName, itemPhoto, tags)
-    items.append(item)
-
-    ref.child(itemName).set({
-        'name' : itemName,
-        'imageURL' : itemPhoto,
-        'tags' : tags
-    })
-
-
-    await bot.say('Added Item ' + itemWait.content)
-    print ('Added Item')
-
-
-@bot.command(pass_context=True)
-async def addtag(ctx):
-    await bot.say('What item would you like to tag?')
-    toTag = await bot.wait_for_message(author = ctx.message.author)
-    itemSearch = toTag.content.lower().replace("'", "")
-
-
-    await bot.say('What is the type of tag you are adding?')
-    tagType = await bot.wait_for_message(author = ctx.message.author)
-
-    await bot.say('What tag would you like to add?')
-    tag = await bot.wait_for_message(author = ctx.message.author)
-
-    capWords = []
-    for word in tag.content.split() :
-        capWords.append(word.capitalize())
-
-    for item in items :
-        if (itemSearch == item.getSearchTerm()) :
-            item.addTag(tagType.content.capitalize(), ' '.join(capWords))
-            ref.child(item.name).update({
-                'tags' : item.tags
-            })
-            break
-
-
-    await bot.say('Added ' + tag.content + ' to ' + toTag.content)
-    print ('Added Tag')
-
-
-
 @bot.command(pass_context=True)
 async def item(ctx, *args):
-  itemSearch = ' '.join(args).lower().replace("'", "")
+    itemSearch = ' '.join(args).lower().replace("'", "")
 
-  found = False
-  for item in items :
-      if (itemSearch == item.getSearchTerm()) :
-          em = discord.Embed(title=item.name, color=1)
-
-          for tagType, aTags in item.tags.items() :
-
-              tag = ', '.join(aTags)
-              em.add_field(name = tagType, value = tag, inline = False)
-
-          if (item.imageURL) :
-              itemImage = str(item.imageURL)
-              em.set_image(url=itemImage)
-
-          await bot.send_message(ctx.message.channel, embed = em)
-          found = True
-          break
-
-  if not found :
-      await bot.say("Item not found")
-
-
-  print ('Found Item')
-
-
-@bot.command(pass_context=True)
-async def delitem(ctx):
-  if verified(ctx.message.author.id):
-    await bot.say('What item would you like to delete?')
-    itemWait = await bot.wait_for_message(author = ctx.message.author)
-    itemSearch = itemWait.content.lower().replace("'", "")
-
-    for i in range(len(items)) :
-        if (itemSearch == items[i].getSearchTerm()) :
-            del items[i]
-            ref.child(items[i].name).delete()
-            break
-
-    await bot.say('Item Deleted!')
-    print('Deleted Item')
-
-
-@bot.command(pass_context=True)
-async def deltag(ctx, *args):
-    await bot.say('Type the name of the item...')
-    itemWait = await bot.wait_for_message(author = ctx.message.author)
-    itemSearch = itemWait.content.lower().replace("'", "")
-
-    await bot.say('Type the type of tag...')
-    tagType = await bot.wait_for_message(author = ctx.message.author)
-
-    await bot.say('Type the tag name...')
-    tagName = await bot.wait_for_message(author = ctx.message.author)
-
+    found = False
     for item in items :
         if (itemSearch == item.getSearchTerm()) :
-            item.deleteTag(tagType.content, tagName.content)
-            ref.child(item.name).update({
-                'tags' : item.tags
-            })
+            em = discord.Embed(title=item.name, color=1)
+
+            for tagType, aTags in item.tags.items() :
+
+                em.add_field(name = tagType, value = aTags, inline = False)
+
+            print(item.imageURL)
+            if (item.imageURL) :
+                itemImage = str(item.imageURL)
+                print("ITEMIMAGE:", itemImage)
+                em.set_image(url=itemImage)
+
+
+            await bot.send_message(ctx.message.channel, embed = em)
+            found = True
             break
 
-    await bot.say('Tag Deleted!')
+    if not found :
+        await bot.say("** Item not found **")
 
-    print('Deleted Item')
+
+    print ('Found Item')
+
+
+@bot.command(pass_context=True)
+async def search(ctx, *args):
+
+    search_results = algolia_index.search(args, {
+        'attributesToRetrieve': [
+            'name'
+        ],
+        'hitsPerPage': 20
+    })
+
+    em = discord.Embed(title="***Search Results***", color=1)
+    em.description = 'Query: ' + str(args)
+
+    display_results = ''
+    for hit in search_results['hits'] :
+        display_results += hit['name'] + '\n'
+
+    em.add_field(name = 'Results', value = display_results, inline = False)
+
+    await bot.send_message(ctx.message.channel, embed = em)
+
+
+
 
 
 @bot.command(pass_context=True)
@@ -408,11 +290,11 @@ async def itemlist(ctx) :
     chapters = {}
     for i in range(65, 91) :
         chapters[chr(i)] = []
-    chapters['c'] = []
 
     for item in items :
         chapters[item.name[0]].append(item)
 
+    # TODO: Note a bug with the book - if there aren't enough items in a field, it'll try to put multiple fields on at once - if there are many empty fields, the program will crash with too many fields
     item_book = Book(chapters, title = "**Item List**", description = "**Hit the reaction buttons to go forwards or backwards!**", per_page = 20)
     em = item_book.get_current_page()
     book_message = await bot.send_message(ctx.message.channel, embed = em)
