@@ -19,6 +19,13 @@ def verified (id) :
     return id in admins
 
 
+from algoliasearch.search_client import SearchClient
+
+client = SearchClient.create('YLEE8RLU7T', '2b4b8e994594989ddcd0a8752e213672')
+algolia_index = client.init_index('monumenta-item-index')
+
+
+
 items = []
 
 # Comment this stuff out during devtime unless needed
@@ -47,12 +54,13 @@ ref = db.collection('items')
 
 retrieved_items = ref.stream()
 
+
+print("Loading items...")
 for doc in retrieved_items :
     data = doc.to_dict()
     itemName = data['name']
     # itemURL = data['imageURL'] if 'imageURL' in data else None
     # TODO: Rework this - probably a hasImage attribute in each item
-    print(itemName)
     itemURL = ''
     itemBlob = bucket.get_blob('item-images/' + itemName)
     if itemBlob :
@@ -62,9 +70,9 @@ for doc in retrieved_items :
         print("MEDIA LINK", itemBlob.media_link)
         print("SELF LINK", itemBlob.self_link)
         print("METADATA", itemBlob.metadata)
-        metadata = itemBlob.metadata
         # itemURL = itemBlob.media_link + '&token=' + metadata['firebaseStorageDownloadTokens']
         '''
+        metadata = itemBlob.metadata
         # TODO: Rework this as well - janky url construction
         itemURL = 'https://firebasestorage.googleapis.com/v0/b/monumenta-item-index.appspot.com/o/item-images%2F' + itemName.replace(' ', '%20') + '?alt=media' + '&token=' + metadata['firebaseStorageDownloadTokens']
 
@@ -72,6 +80,8 @@ for doc in retrieved_items :
     itemTags = data['tags'] if 'tags' in data else None
     # print(itemTags)
     items.append(Item(itemName, itemURL, itemTags))
+
+print("Done loading!")
 
 
 bot.remove_command("help")
@@ -126,6 +136,31 @@ async def item(ctx, *args):
 
 
     print ('Found Item')
+
+
+@bot.command(pass_context=True)
+async def search(ctx, *args):
+
+    search_results = algolia_index.search(args, {
+        'attributesToRetrieve': [
+            'name'
+        ],
+        'hitsPerPage': 20
+    })
+
+    em = discord.Embed(title="***Search Results***", color=1)
+    em.description = 'Query: ' + str(args)
+
+    display_results = ''
+    for hit in search_results['hits'] :
+        display_results += hit['name'] + '\n'
+
+    em.add_field(name = 'Results', value = display_results, inline = False)
+
+    await bot.send_message(ctx.message.channel, embed = em)
+
+
+
 
 
 @bot.command(pass_context=True)
@@ -255,11 +290,11 @@ async def itemlist(ctx) :
     chapters = {}
     for i in range(65, 91) :
         chapters[chr(i)] = []
-    chapters['c'] = []
 
     for item in items :
         chapters[item.name[0]].append(item)
 
+    # TODO: Note a bug with the book - if there aren't enough items in a field, it'll try to put multiple fields on at once - if there are many empty fields, the program will crash with too many fields
     item_book = Book(chapters, title = "**Item List**", description = "**Hit the reaction buttons to go forwards or backwards!**", per_page = 20)
     em = item_book.get_current_page()
     book_message = await bot.send_message(ctx.message.channel, embed = em)
