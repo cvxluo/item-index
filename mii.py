@@ -54,7 +54,6 @@ ref = db.collection('items')
 
 retrieved_items = ref.stream()
 
-
 print("Loading items...")
 for doc in retrieved_items :
     data = doc.to_dict()
@@ -64,16 +63,7 @@ for doc in retrieved_items :
     itemURL = ''
     itemBlob = bucket.get_blob('item-images/' + itemName)
     if itemBlob :
-        '''
-        print("PATH:", itemBlob.path)
-        print("PUBLIC URL", itemBlob.public_url)
-        print("MEDIA LINK", itemBlob.media_link)
-        print("SELF LINK", itemBlob.self_link)
-        print("METADATA", itemBlob.metadata)
-        # itemURL = itemBlob.media_link + '&token=' + metadata['firebaseStorageDownloadTokens']
-        '''
         metadata = itemBlob.metadata
-        # TODO: Rework this as well - janky url construction
         itemURL = 'https://firebasestorage.googleapis.com/v0/b/monumenta-item-index.appspot.com/o/item-images%2F' + itemName.replace(' ', '%20') + '?alt=media' + '&token=' + metadata['firebaseStorageDownloadTokens']
 
 
@@ -114,7 +104,7 @@ async def item(ctx, *args):
     found = False
     for item in items :
         if (itemSearch == item.getSearchTerm()) :
-            em = discord.Embed(title=item.name, color=1)
+            em = discord.Embed(title=item.name, description="[Edit](https://vvvvv.dev/" + item.name.replace(' ', '%20') + ")", color=1)
 
             for tagType, aTags in item.tags.items() :
 
@@ -123,7 +113,6 @@ async def item(ctx, *args):
             print(item.imageURL)
             if (item.imageURL) :
                 itemImage = str(item.imageURL)
-                print("ITEMIMAGE:", itemImage)
                 em.set_image(url=itemImage)
 
 
@@ -181,7 +170,7 @@ async def tag(ctx):
     "🅾" : 'Other'
     }
 
-    em = discord.Embed(title="***Tag Search***", color=1)
+    em = discord.Embed(title="***Tag Search***", description="[Website](https://vvvvv.dev/)", color=1)
 
 
     instructions = ""

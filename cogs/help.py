@@ -17,6 +17,7 @@ class Help:
         em.add_field(name = "**General**", value =
         """
         ***!help*** - shows this command
+        ***!changelog*** - (not working right now) view the changelog for the item index
         """)
 
         em.add_field(name = "**Items**", value =
@@ -24,10 +25,12 @@ class Help:
         ***!item [item name]*** - retrieves an item from the index
         ***!itemlist*** - retrieves every item from the index
         ***!tag*** - searches the item index by tag
+        ***!search [query]*** - searches the item index with a general query
         """)
 
         em.add_field(name = "**Trade**", value =
         """
+        NOTE - TEMPORARILY DISABLED
         ***!addsell*** - begins the process of creating a sell order for an item
         ***!removesell*** - begins the process of deleting all your sell orders for an item
         ***!sells ![item name]*** - retrieves all the sell orders for an item
