@@ -13,7 +13,7 @@ from Book import Book
 bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
 MONUMENTA_SERVER_ID = "313066655494438922"
 
-admins = ["177848553924722688", "140920560610836480"] # Mehaz, Vex
+admins = ["140920560610836480"] # Vex
 
 def verified (id) :
     return id in admins
@@ -104,7 +104,7 @@ async def item(ctx, *args):
     found = False
     for item in items :
         if (itemSearch == item.getSearchTerm()) :
-            em = discord.Embed(title=item.name, description="[Edit](https://vvvvv.dev/" + item.name.replace(' ', '%20') + ")", color=1)
+            em = discord.Embed(title=item.name, description="[Edit](https://vvvvv.dev/search/" + item.name.replace(' ', '%20') + ")", color=1)
 
             for tagType, aTags in item.tags.items() :
 
