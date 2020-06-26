@@ -18,6 +18,7 @@ class Help:
         """
         ***!help*** - shows this command
         ***!changelog*** - (not working right now) view the changelog for the item index
+        ***!stats*** - shows some various stats about the item index
         """)
 
         em.add_field(name = "**Items**", value =

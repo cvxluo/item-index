@@ -50,9 +50,13 @@ bucket = storage.bucket()
 
 # As an admin, the app has access to read and write all data, regradless of Security Rules
 ref = db.collection('items')
+stats = db.collection('stats').document('discord')
 # print(ref.get())
 
 retrieved_items = ref.stream()
+
+limit = 10
+count = 0
 
 print("Loading items...")
 for doc in retrieved_items :
@@ -71,12 +75,18 @@ for doc in retrieved_items :
     # print(itemTags)
     items.append(Item(itemName, itemURL, itemTags))
 
+    count += 1
+    if limit <= count :
+        break
+
+    
+
 print("Done loading!")
 
 
 bot.remove_command("help")
 
-cogs = ['cogs.kaul', 'cogs.help', 'cogs.wiki']
+cogs = ['cogs.kaul', 'cogs.help', 'cogs.wiki', 'cogs.stats']
 
 for cog in cogs:
     try:
@@ -99,6 +109,10 @@ async def ping():
 
 @bot.command(pass_context=True)
 async def item(ctx, *args):
+    if not args :
+        await bot.say("**No item name specified!**")
+        return
+
     itemSearch = ' '.join(args).lower().replace("'", "")
 
     found = False
@@ -121,7 +135,14 @@ async def item(ctx, *args):
             break
 
     if not found :
-        await bot.say("** Item not found **")
+        fail = stats.get().to_dict()['itemFail']
+        stats.update({'itemFail' : fail + 1})
+        await bot.say("**Item not found**")
+
+    else :
+        success = stats.get().to_dict()['itemFound']
+        stats.update({'itemFound' : success + 1})
+
 
 
     print ('Found Item')
@@ -145,6 +166,9 @@ async def search(ctx, *args):
         display_results += hit['name'] + '\n'
 
     em.add_field(name = 'Results', value = display_results, inline = False)
+
+    search_number = stats.get().to_dict()['search']
+    stats.update({'search' : search_number + 1})
 
     await bot.send_message(ctx.message.channel, embed = em)
 
@@ -269,6 +293,9 @@ async def tag(ctx):
         await bot.clear_reactions(book_message)
 
 
+    tag_search_number = stats.get().to_dict()['tagSearch']
+    stats.update({'tagSearch' : tag_search_number + 1})
+
     print ('Tag Search')
 
 
@@ -324,6 +351,10 @@ async def itemlist(ctx) :
 
     else :
         await bot.clear_reactions(book_message)
+
+    
+    itemlist_number = stats.get().to_dict()['itemlist']
+    stats.update({'itemlist' : itemlist_number + 1})
 
 
 
