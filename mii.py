@@ -6,8 +6,8 @@ from datetime import datetime
 import time
 
 from item import Item
-from Book import Book
 
+from discordbook import Book, Chapter
 
 
 bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
@@ -55,6 +55,8 @@ stats = db.collection('stats').document('discord')
 
 retrieved_items = ref.stream()
 
+count = 0
+limit = 30
 
 print("Loading items...")
 for doc in retrieved_items :
@@ -72,6 +74,14 @@ for doc in retrieved_items :
     itemTags = data['tags'] if 'tags' in data else None
     # print(itemTags)
     items.append(Item(itemName, itemURL, itemTags))
+
+    count += 1
+
+    if count % 20 == 0 :
+        print("Loaded " + str(count) + "...")
+
+    if count >= limit :
+        break
 
 
     
@@ -119,7 +129,6 @@ async def item(ctx, *args):
 
                 em.add_field(name = tagType, value = aTags, inline = False)
 
-            print(item.imageURL)
             if (item.imageURL) :
                 itemImage = str(item.imageURL)
                 em.set_image(url=itemImage)
@@ -298,58 +307,31 @@ async def tag(ctx):
 async def itemlist(ctx) :
 
     items.sort()
-    chapters = {}
+
+    item_line = 0
+    chapters = []
     for i in range(65, 91) :
-        chapters[chr(i)] = []
+        chapter_lines = []
+        letter_title = chr(i)
 
-    for item in items :
-        chapters[item.name[0]].append(item)
-
-    # TODO: Note a bug with the book - if there aren't enough items in a field, it'll try to put multiple fields on at once - if there are many empty fields, the program will crash with too many fields
-    item_book = Book(chapters, title = "**Item List**", description = "**Hit the reaction buttons to go forwards or backwards!**", per_page = 20)
-    em = item_book.get_current_page()
-    book_message = await bot.send_message(ctx.message.channel, embed = em)
-
-    OPTIONS = [
-        '\U000023ea', # Reverse
-        '\U00002b05', # Left Arrow
-        '\U000027a1', # Right Arrow
-        '\U000023e9', # Fast Forward
-    ]
-
-    for option in OPTIONS :
-        await bot.add_reaction(book_message, option)
+        while item_line < len(items) and items[item_line].name[0] == letter_title :
+            chapter_lines.append(items[item_line].name)
+            item_line += 1
+        
+        chapter = Chapter(title = letter_title, lines = chapter_lines)
+        chapters.append(chapter)
 
 
-    response = await bot.wait_for_reaction(OPTIONS, user = ctx.message.author, timeout=10.0, message = book_message)
 
-    while response :
-        reacted_emoji = response.reaction.emoji
-
-        if reacted_emoji == '\U00002b05' :
-            item_book.one_page_backward()
-
-        elif reacted_emoji == '\U000027a1' :
-            item_book.one_page_forward()
-
-        elif reacted_emoji == '\U000023ea' :
-            item_book.page_backward(5)
-
-        elif reacted_emoji == '\U000023e9' :
-            item_book.page_forward(5)
-
-
-        new_embed = item_book.get_current_page()
-        await bot.edit_message(book_message, embed = new_embed)
-        response = await bot.wait_for_reaction(OPTIONS, user = ctx.message.author, timeout=10.0, message = book_message)
-
-
-    else :
-        await bot.clear_reactions(book_message)
-
-    
     itemlist_number = stats.get().to_dict()['itemlist']
     stats.update({'itemlist' : itemlist_number + 1})
+
+    item_book = Book(chapters, title = "**Item List**", description = "**Hit the reaction buttons to go forwards or backwards!**", per_page = 20)
+
+    await item_book.open_book(bot, ctx.message.channel, ctx.message.author)
+    
+
+
 
 
 
