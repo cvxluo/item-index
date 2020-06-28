@@ -7,7 +7,7 @@ Monumenta Item Index bot for Discord
     * Removing items
     * Tagging system for items - add, remove, and modify tags
     * Looking up items
-    * Referencing Mirror's Region 1 item spreadsheet
+    * Robust searching
 
 * ##### Kaul
     * Add and remove Kaul role
@@ -16,18 +16,16 @@ Monumenta Item Index bot for Discord
 
 #### TODO
 * ##### Major
-    * Better antispam for Kaul - maybe connecting to server?
-    * Implement spellchecker
     * Hide security vulnerabilities
     * Support multiple tag searching
+    * Move towards open sourcing
 
 * ##### Minor
     * More detailed help commands
 
 * ##### Backend
+    * Restructuring item image retrieval
 
 
 #### Bugs
-
-- [ ] Finishing getting from spreadsheet crashes the bot despite success
-- [ ] Book has issues with improper formatting and indexing
+- Trade is completely broken

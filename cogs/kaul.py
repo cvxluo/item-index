@@ -1,91 +1,97 @@
 import discord
 from discord.ext import commands
 
-
-MONUMENTA_SERVER_ID = "313066655494438922"
-
+from discordbook import Book, Chapter
 
 
-class Kaul:
+MONUMENTA_SERVER_ID = 313066655494438922
+
+
+class Kaul (commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
 
+        # TODO: Debug why this doesn't work with get_guild - would reduce a lot of redundancy
+        # self.server = self.bot.get_guild(MONUMENTA_SERVER_ID)
+        # print("SERVER GOTTEN + " + self.server)
+        # self.kaul_role = discord.utils.get(self.server.roles, name="Kaul")
 
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def rank(self, ctx):
 
-        author = ctx.message.author
+        author = ctx.author
         mention = author.mention
-        server = self.bot.get_server(MONUMENTA_SERVER_ID)
-        role = discord.utils.get(server.roles, name="Kaul")
-        await self.bot.add_roles(author, role)
 
-        await self.bot.say(mention + ", you now have the role for Kaul")
+        server = self.bot.get_guild(MONUMENTA_SERVER_ID)
+        kaul_role = discord.utils.get(server.roles, name="Kaul")
 
-    @commands.command(pass_context=True)
+        await author.add_roles(kaul_role)
+        await ctx.channel.send(mention + ", you now have the role for Kaul")
+
+
+
+    @commands.command()
     async def derank(self, ctx):
 
-        author = ctx.message.author
+        author = ctx.author
         mention = author.mention
-        server = self.bot.get_server(MONUMENTA_SERVER_ID)
-        role = discord.utils.get(server.roles, name="Kaul")
-        await self.bot.remove_roles(author, role)
 
-        await self.bot.say(mention + ", you have removed your role for Kaul")
+        server = self.bot.get_guild(MONUMENTA_SERVER_ID)
+        kaul_role = discord.utils.get(server.roles, name="Kaul")
+
+        await author.remove_roles(kaul_role)
+        await ctx.channel.send(mention + ", you have removed your role for Kaul")
 
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def kaultime(self, ctx, *args):
 
+        server = self.bot.get_guild(MONUMENTA_SERVER_ID)
+        kaul_role = discord.utils.get(server.roles, name="Kaul")
+
         author = ctx.message.author.id
-        server = self.bot.get_server(MONUMENTA_SERVER_ID)
-        role = discord.utils.get(server.roles, name="Kaul")
-        mention = role.mention
+        mention = kaul_role.mention
 
 
         if (args) :
-            await self.bot.say(mention + " , Kaul in " + args[0] + " seconds!")
+            await ctx.channel.send(mention + " , Kaul in " + args[0] + " seconds!")
         else :
-            await self.bot.say(mention + ", its Kaul time!")
+            await ctx.channel.send(mention + ", its Kaul time!")
 
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def kaulnum(self, ctx, *args):
 
-        server = self.bot.get_server(MONUMENTA_SERVER_ID)
-        role = discord.utils.get(server.roles, name="Kaul")
+        server = self.bot.get_guild(MONUMENTA_SERVER_ID)
+        kaul_role = discord.utils.get(server.roles, name="Kaul")
 
         count = 0
         for member in server.members:
-            if (role in member.roles) :
+            if (kaul_role in member.roles) :
                 count += 1
 
-        await self.bot.say(str(count) + " players have the Kaul role")
+        await ctx.channel.send(str(count) + " players have the Kaul role")
 
 
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def whohaskaul(self, ctx, *args):
 
-        server = self.bot.get_server(MONUMENTA_SERVER_ID)
-        role = discord.utils.get(server.roles, name="Kaul")
+        server = self.bot.get_guild(MONUMENTA_SERVER_ID)
+        kaul_role = discord.utils.get(server.roles, name="Kaul")
 
         members_with_role = []
         for member in server.members:
-            if (role in member.roles) :
-                members_with_role.append(member)
+            if (kaul_role in member.roles) :
+                members_with_role.append('**' + member.display_name + '** (' + member.name + ')')
 
 
-        output = ""
-        # TODO : Will break with too many members - 2000 char limit, fix later
-        for member in members_with_role :
-            output += "**" +member.display_name + "** (" + member.name + ")\n"
+        chapter = Chapter('Kaul', members_with_role)
+        kaul_book = Book([chapter], title = "**Kaul Roles**", description = "Members with the Kaul Role", per_page = 10)
 
-        await self.bot.say(output)
-
-
-
+        await kaul_book.open_book(self.bot, ctx.channel, ctx.author)
 
 
 

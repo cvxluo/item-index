@@ -56,7 +56,7 @@ stats = db.collection('stats').document('discord')
 retrieved_items = ref.stream()
 
 count = 0
-limit = 30
+limit = 3
 
 print("Loading items...")
 for doc in retrieved_items :
@@ -77,7 +77,7 @@ for doc in retrieved_items :
 
     count += 1
 
-    if count % 20 == 0 :
+    if count % 10 == 0 :
         print("Loaded " + str(count) + "...")
 
     if count >= limit :

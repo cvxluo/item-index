@@ -4,7 +4,7 @@ from discord.ext import commands
 from firebase_admin import firestore
 
 
-class Stats:
+class Stats (commands.Cog):
     def __init__(self, bot):
         db = firestore.client()
         self.bot = bot
@@ -12,7 +12,7 @@ class Stats:
 
 
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def stats(self, ctx, *args) :
 
         em = discord.Embed(title="**Monumenta Item Index Bot - Statistics**", color=1)
@@ -42,25 +42,25 @@ class Stats:
 
         em.set_footer(text = "Note that these statistics are collected anonymously and may not be accurate.")
 
-        await self.bot.send_message(ctx.message.channel, embed = em)
+        await ctx.channel.send(embed = em)
 
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def resetstats(self, ctx, *args) :
 
         admins = ["140920560610836480"] # Vex
-        if ctx.message.author.id in admins :
-            confirm_message = await self.bot.send_message(ctx.message.channel, "Are you sure?")
+        if ctx.author.id in admins :
+            confirm_message = await ctx.channel.send_message(ctx.message.channel, "Are you sure?")
             await self.bot.add_reaction(confirm_message, '1⃣')
             await self.bot.add_reaction(confirm_message, '🅾')
 
-            response = await self.bot.wait_for_reaction(['1⃣', '🅾'], user = ctx.message.author, timeout=10.0, message = confirm_message)
+            response = await self.bot.wait_for_reaction(['1⃣', '🅾'], user = ctx.author, timeout=10.0, message = confirm_message)
 
             if response : # If timeout, response will be None
                 reacted_emoji = response.reaction.emoji
 
                 if reacted_emoji == "1⃣" :
-                    await self.bot.say('Resetting stats...')
+                    await ctx.channel.send('Resetting stats...')
                     self.stat_ref.document('discord').set({
                         'itemFail' : 0,
                         'itemFound' : 0,
@@ -68,18 +68,18 @@ class Stats:
                         'search' : 0,
                         'tagSearch' : 0,
                     })
-                    await bot.say("Done!")
+                    await ctx.channel.send("Done!")
 
                 else :
-                    await self.bot.say("Aborted!")
+                    await ctx.channel.send("Aborted!")
 
             else :
-                await self.bot.say("**`Timed out...`**")
+                await ctx.channel.send("**`Timed out...`**")
                 return
 
 
         else :
-            await self.bot.send_message(ctx.message.channel, "Not verified!")
+            await ctx.channel.send("Not verified!")
 
     
 

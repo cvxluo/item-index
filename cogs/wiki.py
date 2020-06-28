@@ -4,17 +4,17 @@ from discord.ext import commands
 import wikia
 
 
-class Wiki:
+class Wiki (commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
 
     # Wiki integration
-    @commands.command(pass_context=True)
+    @commands.command()
     async def wiki(self, ctx, *args) :
 
         if not args :
-            await self.bot.say("Please provide a wiki page to search!")
+            await ctx.channel.send("Please provide a wiki page to search!")
             return
 
         message = ' '.join(args)
@@ -22,7 +22,7 @@ class Wiki:
             page = wikia.page("monumentammo", message)
 
         except :
-            await self.bot.say("Wiki page not found!")
+            await ctx.channel.send("Wiki page not found!")
 
         else :
             output = ""
@@ -33,12 +33,11 @@ class Wiki:
             while len(content) > 1500 :
                 output = content[:1500]
                 content = content[1500:]
-                await self.bot.say("```" + output + "```")
+                await ctx.channel.send("```" + output + "```")
 
             output = content
-            await self.bot.say("```" + output + "```")
-            await self.bot.say("Full page at: " + page.url.replace(' ', '_'))
-
+            await ctx.channel.send("```" + output + "```")
+            await ctx.channel.send("Full page at: " + page.url.replace(' ', '_'))
 
 
 
