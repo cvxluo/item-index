@@ -2,12 +2,12 @@ import discord
 from discord.ext import commands
 
 
-class Help:
+class Help (commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def help(self, ctx, *args) :
 
         # TODO : Write more specific command descriptions for each command
@@ -54,10 +54,10 @@ class Help:
 
         em.set_footer(text = "Brackets indicate a place for you to put an argument (without the brackets) - ! indicates the argument is optional")
 
-        await self.bot.send_message(ctx.message.channel, embed = em)
+        await ctx.channel.send(embed = em)
 
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def changelog(self, ctx) :
 
         # TODO: finish this when rewrite is done
@@ -68,7 +68,7 @@ class Help:
         """)
 
 
-        await self.bot.send_message(ctx.message.channel, embed = em)
+        await ctx.channel.send(embed = em)
 
 
 
