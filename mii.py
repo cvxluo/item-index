@@ -7,7 +7,7 @@ import time
 
 from item import Item
 
-from discordbook import Book, Chapter
+from discordbook import Book, AlphabeticalBook, Chapter
 
 
 bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
@@ -56,7 +56,7 @@ stats = db.collection('stats').document('discord')
 retrieved_items = ref.stream()
 
 count = 0
-limit = 30
+# limit = 30
 
 print("Loading items...")
 for doc in retrieved_items :
@@ -80,8 +80,8 @@ for doc in retrieved_items :
     if count % 10 == 0 :
         print("Loaded " + str(count) + "...")
 
-    if count >= limit :
-        break
+    #if count >= limit :
+    #    break
 
 
     
@@ -238,19 +238,21 @@ async def tag(ctx):
 
 
     except asyncio.TimeoutError:
-        await channel.send('Timed out...')
-        await book_message.clear_reactions()
+        await ctx.channel.send('Timed out...')
+        await instructions_message.clear_reactions()
 
 
+
+
+    tag_name_message = await ctx.channel.send('What is the tag you are searching for? (ex. Protection I, Wooden Sword, Armor, Unique, etc.)')
     try :
-        await ctx.channel.send('What is the tag you are searching for? (ex. Protection I, Wooden Sword, Armor, Unique, etc.)')
         tagNameM = await bot.wait_for('message', timeout = 10.0, check = check_author)
         tagName = tagNameM.content.capitalize()
 
 
     except asyncio.TimeoutError:
-        await channel.send('Timed out...')
-        await book_message.clear_reactions()
+        await ctx.channel.send('Timed out...')
+        await tag_name_message.clear_reactions()
     
 
 
@@ -266,7 +268,6 @@ async def tag(ctx):
 
     chapter = Chapter(title = tagName, lines = taggedItems)
 
-    print("CHAPTER: " + str(chapter))
     tag_book = Book([chapter], title = "***Tagged Items***", description = "**" + tagType + "**", per_page = 20)
 
     tag_search_number = stats.get().to_dict()['tagSearch']
@@ -284,25 +285,10 @@ async def itemlist(ctx) :
 
     items.sort()
 
-    item_line = 0
-    chapters = []
-    for i in range(65, 91) :
-        chapter_lines = []
-        letter_title = chr(i)
-
-        while item_line < len(items) and items[item_line].name[0] == letter_title :
-            chapter_lines.append(items[item_line].name)
-            item_line += 1
-        
-        chapter = Chapter(title = letter_title, lines = chapter_lines)
-        chapters.append(chapter)
-
-
-
     itemlist_number = stats.get().to_dict()['itemlist']
     stats.update({'itemlist' : itemlist_number + 1})
 
-    item_book = Book(chapters, title = "**Item List**", description = "**Hit the reaction buttons to go forwards or backwards!**", per_page = 20)
+    item_book = AlphabeticalBook(items, title = "**Item List**", description = "**Hit the reaction buttons to go forwards or backwards!**", per_page = 20)
 
     await item_book.open_book(bot, ctx.message.channel, ctx.message.author)
     
