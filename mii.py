@@ -5,6 +5,9 @@ from discord.ext.commands import Bot
 from datetime import datetime
 import time
 
+# Needed to access Heroku config vars
+import os
+
 from item import Item
 
 from discordbook import Book, AlphabeticalBook, Chapter
@@ -56,7 +59,7 @@ stats = db.collection('stats').document('discord')
 retrieved_items = ref.stream()
 
 count = 0
-# limit = 30
+# limit = 30 
 
 print("Loading items...")
 for doc in retrieved_items :
@@ -79,7 +82,7 @@ for doc in retrieved_items :
 
     if count % 10 == 0 :
         print("Loaded " + str(count) + "...")
-
+        
     #if count >= limit :
     #    break
 
@@ -285,16 +288,18 @@ async def itemlist(ctx) :
 
     items.sort()
 
+    item_names = [str(item) for item in items]
+
     itemlist_number = stats.get().to_dict()['itemlist']
     stats.update({'itemlist' : itemlist_number + 1})
 
-    item_book = AlphabeticalBook(items, title = "**Item List**", description = "**Hit the reaction buttons to go forwards or backwards!**", per_page = 20)
+    item_book = AlphabeticalBook(item_names, title = "**Item List**", description = "**Hit the reaction buttons to go forwards or backwards!**", per_page = 20)
 
     await item_book.open_book(bot, ctx.message.channel, ctx.message.author)
     
 
 
 
-
-TOKEN = open("bot-token").read().rstrip()
+# Get token from Heroku
+TOKEN = os.environ['BOT_TOKEN']
 bot.run(TOKEN)
