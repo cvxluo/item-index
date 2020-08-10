@@ -241,7 +241,6 @@ async def tag(ctx):
 
 
     except asyncio.TimeoutError:
-        await ctx.channel.send('Timed out...')
         await instructions_message.clear_reactions()
 
 
@@ -254,7 +253,6 @@ async def tag(ctx):
 
 
     except asyncio.TimeoutError:
-        await ctx.channel.send('Timed out...')
         await tag_name_message.clear_reactions()
     
 
