@@ -24,7 +24,7 @@ google-resumable-media==0.3.2
 googleapis-common-protos==1.52.0
 grpc-google-iam-v1==0.12.3
 grpcio==1.31.0
-httplib2==0.12.1
+httplib2==0.18.0
 idna==2.10
 idna-ssl==1.1.0
 msgpack==0.6.1
