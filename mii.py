@@ -52,7 +52,9 @@ if os.path.exists(CREDENTIAL_PATH) :
 
 # Otherwise, try to initialize from default parameters, assuming running on Compute Engine
 else :
-    firebase_admin.initialize_app()
+    firebase_admin.initialize_app(options={
+        'storageBucket': 'monumenta-item-index.appspot.com'
+        })
 
     # Create the Secret Manager client.
     secret_manager = secretmanager.SecretManagerServiceClient()
@@ -90,7 +92,7 @@ algolia_index = client.init_index('monumenta-item-index')
 items = []
 
 count = 0
-limit = 30 
+# limit = 30 
 
 print("Loading items...")
 for doc in retrieved_items :
@@ -114,8 +116,8 @@ for doc in retrieved_items :
     if count % 10 == 0 :
         print("Loaded " + str(count) + "...")
         
-    if count >= limit :
-        break
+    #if count >= limit :
+    #    break
 
 
     
