@@ -5,7 +5,7 @@ from discord.ext.commands import Bot
 from datetime import datetime
 import time
 
-# Needed to access Heroku config vars
+# Needed to check presense of keys
 import os
 
 from item import Item
@@ -22,16 +22,6 @@ def verified (id) :
     return id in admins
 
 
-from algoliasearch.search_client import SearchClient
-
-client = SearchClient.create('YLEE8RLU7T', '2b4b8e994594989ddcd0a8752e213672')
-algolia_index = client.init_index('monumenta-item-index')
-
-
-
-items = []
-
-# Comment this stuff out during devtime unless needed
 # Firebase initialization and creation of a reference
 
 import firebase_admin
@@ -39,14 +29,34 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 from firebase_admin import storage
 
-# Fetch the service account key JSON file contents
-cred = credentials.Certificate('monumenta-item-index-firebase-adminsdk-2vgeu-06804b36e1.json')
+from google.cloud import secretmanager
 
-# Initialize the app with a service account, granting admin privileges
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://monumenta-item-index.firebaseio.com/',
-    'storageBucket': 'monumenta-item-index.appspot.com'
-})
+CREDENTIAL_PATH = 'monumenta-item-index-firebase-adminsdk-vm0ae-0bfa3c4c42.json'
+algolia_api_key = ""
+secret_manager = None
+
+# If dev credentials are present, bot should be run on development mode, and initialized with those dev credentials
+if os.path.exists(CREDENTIAL_PATH) :
+    # Fetch the service account key JSON file contents
+    cred = credentials.Certificate(CREDENTIAL_PATH)
+
+    # Initialize the app with a service account, granting admin privileges
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://monumenta-item-index.firebaseio.com/',
+        'storageBucket': 'monumenta-item-index.appspot.com'
+    })
+
+    # Create the Secret Manager client.
+    secret_manager = secretmanager.SecretManagerServiceClient.from_service_account_json(CREDENTIAL_PATH)
+
+
+# Otherwise, try to initialize from default parameters, assuming running on Compute Engine
+else :
+    firebase_admin.initialize_app()
+
+    # Create the Secret Manager client.
+    secret_manager = secretmanager.SecretManagerServiceClient()
+
 
 db = firestore.client()
 bucket = storage.bucket()
@@ -58,8 +68,29 @@ stats = db.collection('stats').document('discord')
 
 retrieved_items = ref.stream()
 
+
+# Set up the Algolia Client
+
+# Build the resource name of the secret version.
+algolia_secret_path = secret_manager.secret_version_path('monumenta-item-index', 'algolia-api-key', 'latest')
+
+# Access the secret version.
+response = secret_manager.access_secret_version(algolia_secret_path)
+
+payload = response.payload.data.decode('UTF-8')
+algolia_api_key = payload
+
+from algoliasearch.search_client import SearchClient
+
+client = SearchClient.create('YLEE8RLU7T', algolia_api_key)
+algolia_index = client.init_index('monumenta-item-index')
+
+
+
+items = []
+
 count = 0
-# limit = 30 
+limit = 30 
 
 print("Loading items...")
 for doc in retrieved_items :
@@ -83,8 +114,8 @@ for doc in retrieved_items :
     if count % 10 == 0 :
         print("Loaded " + str(count) + "...")
         
-    #if count >= limit :
-    #    break
+    if count >= limit :
+        break
 
 
     
@@ -298,6 +329,8 @@ async def itemlist(ctx) :
 
 
 
-# Get token from Heroku
-TOKEN = os.environ['BOT_TOKEN']
-bot.run(TOKEN)
+bot_token_secret_path = secret_manager.secret_version_path('monumenta-item-index', 'bot-token', 'latest')
+response = secret_manager.access_secret_version(bot_token_secret_path)
+bot_token = response.payload.data.decode('UTF-8')
+
+bot.run(bot_token)
