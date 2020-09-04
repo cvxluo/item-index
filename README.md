@@ -16,9 +16,8 @@ Monumenta Item Index bot for Discord
 
 #### TODO
 * ##### Major
-    * Hide security vulnerabilities
     * Support multiple tag searching
-    * Move towards open sourcing
+    * Refactor for cleaner code
 
 * ##### Minor
     * More detailed help commands

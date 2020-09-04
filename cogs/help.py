@@ -19,6 +19,7 @@ class Help (commands.Cog):
         ***!help*** - shows this command
         ***!changelog*** - (not working right now) view the changelog for the item index
         ***!stats*** - shows some various stats about the item index
+        ***!contribute*** - view links to code behind bot and website
         """)
 
         em.add_field(name = "**Items**", value =
@@ -65,6 +66,23 @@ class Help (commands.Cog):
         em = discord.Embed(title="**Monumenta Item Index Bot**", color=1)
         em.add_field(name = "**Changelog**", value =
         """
+        """)
+
+
+        await ctx.channel.send(embed = em)
+
+
+    @commands.command()
+    async def contribute(self, ctx) :
+
+        em = discord.Embed(title="**Monumenta Item Index Bot**", color=1)
+        em.add_field(name = "**Contribute**", value =
+        """
+        Both the Discord bot and website are open source:
+        [Bot code](https://github.com/cvxluo/item-index)
+        [Website code](https://github.com/cvxluo/item-index-website)
+        Currently maintained by <@140920560610836480>
+        Open to contribution, feel free to make a pull request or issue!
         """)
 
 

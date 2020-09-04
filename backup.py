@@ -11,7 +11,7 @@ from item import Item
 import json
 
 # Fetch the service account key JSON file contents
-cred = credentials.Certificate('monumenta-item-index-firebase-adminsdk-2vgeu-06804b36e1.json')
+cred = credentials.Certificate('monumenta-item-index-firebase-adminsdk-vm0ae-0bfa3c4c42.json')
 
 # Initialize the app with a service account, granting admin privileges
 firebase_admin.initialize_app(cred, {
