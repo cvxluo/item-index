@@ -154,6 +154,7 @@ async def item(ctx, *args):
         await ctx.channel.send("**No item name specified!**")
         return
 
+    # TODO: Rewrite item finding
     itemSearch = ' '.join(args).lower().replace("'", "")
 
     found = False
@@ -176,10 +177,66 @@ async def item(ctx, *args):
             found = True
             break
 
+
+
     if not found :
         fail = stats.get().to_dict()['itemFail']
         stats.update({'itemFail' : fail + 1})
-        await bot.say("**Item not found**")
+
+        # Perform search - if only one result, ask user if it is correct
+        search_results = algolia_index.search(args, {
+        'attributesToRetrieve': [
+            'name'
+        ],
+        'hitsPerPage': 5
+        })
+
+        if len(search_results['hits']) :
+            possible_item_name = search_results['hits'][0]['name']
+            possible_question = await ctx.channel.send("**Item not found, did you mean *" + possible_item_name + "*?**")
+            await possible_question.add_reaction('\U00002705')
+
+            def check_response(reaction, user) :
+                return str(reaction) == '\U00002705' and user == ctx.author
+
+            reaction, user = await bot.wait_for('reaction_add', timeout = 10.0, check = check_response)
+            reaction = str(reaction)
+
+            if (reaction == '\U00002705') :
+                itemSearch = possible_item_name.lower().replace("'", "")
+
+                found = False
+                for item in items :
+                    if (itemSearch == item.getSearchTerm()) :
+                        em = discord.Embed(title=item.name, description="[Edit](https://vvvvv.dev/search/" + item.name.replace(' ', '%20') + ")", color=1)
+
+                        for tagType, aTags in item.tags.items() :
+
+                            em.add_field(name = tagType, value = aTags, inline = False)
+
+                        if (item.imageURL) :
+                            itemImage = str(item.imageURL)
+                            em.set_image(url=itemImage)
+
+
+                        print ('Found Item: ' + str(item))
+
+                        await ctx.channel.send(embed = em)
+                        found = True
+                        break
+                     
+                
+                success = stats.get().to_dict()['itemFound']
+                stats.update({'itemFound' : success + 1})
+
+
+        else :
+            await ctx.channel.send("**Item not found**")
+
+
+        
+    
+        
 
     else :
         success = stats.get().to_dict()['itemFound']
