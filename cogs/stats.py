@@ -10,8 +10,6 @@ class Stats (commands.Cog):
         self.bot = bot
         self.stat_ref = db.collection('stats')
 
-
-
     @commands.command()
     async def stats(self, ctx, *args) :
 
@@ -30,12 +28,10 @@ class Stats (commands.Cog):
         discord_stats += "**Searches Performed** - " + str(search) + "\n"
         discord_stats += "**Tag Searches Performed** - " + str(tagSearch) + "\n"
 
-
         website_stat_dict = self.stat_ref.document('website').get().to_dict()
         visits = website_stat_dict['visits']
 
         website_stats = "**Visits** - " + str(visits) + "\n"
-
 
         em.add_field(name = "**Discord**", value = discord_stats)
         em.add_field(name = "**Website**", value = website_stats)
@@ -44,11 +40,10 @@ class Stats (commands.Cog):
 
         await ctx.channel.send(embed = em)
 
-
     @commands.command()
     async def resetstats(self, ctx, *args) :
 
-        admins = ["140920560610836480"] # Vex
+        admins = ["140920560610836480"]  # Vex
         if ctx.author.id in admins :
             confirm_message = await ctx.channel.send_message(ctx.message.channel, "Are you sure?")
             await self.bot.add_reaction(confirm_message, '1⃣')
@@ -56,7 +51,7 @@ class Stats (commands.Cog):
 
             response = await self.bot.wait_for_reaction(['1⃣', '🅾'], user = ctx.author, timeout=10.0, message = confirm_message)
 
-            if response : # If timeout, response will be None
+            if response :  # If timeout, response will be None
                 reacted_emoji = response.reaction.emoji
 
                 if reacted_emoji == "1⃣" :
@@ -77,12 +72,8 @@ class Stats (commands.Cog):
                 await ctx.channel.send("**`Timed out...`**")
                 return
 
-
         else :
             await ctx.channel.send("Not verified!")
-
-    
-
 
 
 def setup(bot):

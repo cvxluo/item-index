@@ -1,35 +1,40 @@
 import discord
 import asyncio
 from discord.ext import commands
-from discord.ext.commands import Bot
 from datetime import datetime
-import time
 
-# Needed to check presense of keys
+# Needed to check if keys exist
 import os
 
-from item import Item
-
-from discordbook import Book, AlphabeticalBook, Chapter
-
-
-bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
-MONUMENTA_SERVER_ID = "313066655494438922"
-
-admins = ["140920560610836480"] # Vex
-
-def verified (id) :
-    return id in admins
-
-
-# Firebase initialization and creation of a reference
-
+# Firebase and GCP tools
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from firebase_admin import storage
 
 from google.cloud import secretmanager
+
+
+# Algolia
+from algoliasearch.search_client import SearchClient
+
+
+# Custom modules
+from item import Item
+from discordbook import Book, AlphabeticalBook, Chapter
+
+
+bot = commands.Bot(command_prefix='!', description='Monumenta Item Index')
+MONUMENTA_SERVER_ID = "313066655494438922"
+
+admins = ["140920560610836480"]  # Vex
+
+
+def verified(id) :
+    return id in admins
+
+
+# Firebase initialization and creation of a reference
 
 CREDENTIAL_PATH = 'monumenta-item-index-firebase-adminsdk-vm0ae-0bfa3c4c42.json'
 algolia_api_key = ""
@@ -52,9 +57,9 @@ if os.path.exists(CREDENTIAL_PATH) :
 
 # Otherwise, try to initialize from default parameters, assuming running on Compute Engine
 else :
-    firebase_admin.initialize_app(options={
+    firebase_admin.initialize_app(options = {
         'storageBucket': 'monumenta-item-index.appspot.com'
-        })
+    })
 
     # Create the Secret Manager client.
     secret_manager = secretmanager.SecretManagerServiceClient()
@@ -82,17 +87,15 @@ response = secret_manager.access_secret_version(algolia_secret_path)
 payload = response.payload.data.decode('UTF-8')
 algolia_api_key = payload
 
-from algoliasearch.search_client import SearchClient
 
 client = SearchClient.create('YLEE8RLU7T', algolia_api_key)
 algolia_index = client.init_index('monumenta-item-index')
 
 
-
 items = []
 
 count = 0
-# limit = 30 
+# limit = 30
 
 print("Loading items...")
 for doc in retrieved_items :
@@ -106,7 +109,6 @@ for doc in retrieved_items :
         metadata = itemBlob.metadata
         itemURL = 'https://firebasestorage.googleapis.com/v0/b/monumenta-item-index.appspot.com/o/item-images%2F' + itemName.replace(' ', '%20') + '?alt=media' + '&token=' + metadata['firebaseStorageDownloadTokens']
 
-
     itemTags = data['tags'] if 'tags' in data else None
     # print(itemTags)
     items.append(Item(itemName, itemURL, itemTags))
@@ -115,12 +117,10 @@ for doc in retrieved_items :
 
     if count % 10 == 0 :
         print("Loaded " + str(count) + "...")
-        
-    #if count >= limit :
-    #    break
 
+    # if count >= limit :
+    #     break
 
-    
 
 print("Done loading!")
 
@@ -137,11 +137,11 @@ for cog in cogs:
         print("Failed to load extension " + cog + " because " + str(e))
 
 
-
 @bot.event
 async def on_ready():
     print('Bot is listening!')
     print('Woke up at ' + datetime.now().strftime("%m/%d/%Y %H:%M:%S"))
+
 
 @bot.command()
 async def ping():
@@ -170,14 +170,11 @@ async def item(ctx, *args):
                 itemImage = str(item.imageURL)
                 em.set_image(url=itemImage)
 
-
-            print ('Found Item: ' + str(item))
+            print('Found Item: ' + str(item))
 
             await ctx.channel.send(embed = em)
             found = True
             break
-
-
 
     if not found :
         fail = stats.get().to_dict()['itemFail']
@@ -185,10 +182,10 @@ async def item(ctx, *args):
 
         # Perform search - if only one result, ask user if it is correct
         search_results = algolia_index.search(args, {
-        'attributesToRetrieve': [
-            'name'
-        ],
-        'hitsPerPage': 5
+            'attributesToRetrieve': [
+                'name'
+            ],
+            'hitsPerPage': 5
         })
 
         if len(search_results['hits']) :
@@ -218,30 +215,21 @@ async def item(ctx, *args):
                             itemImage = str(item.imageURL)
                             em.set_image(url=itemImage)
 
-
-                        print ('Found Item: ' + str(item))
+                        print('Found Item: ' + str(item))
 
                         await ctx.channel.send(embed = em)
                         found = True
                         break
-                     
-                
+
                 success = stats.get().to_dict()['itemFound']
                 stats.update({'itemFound' : success + 1})
-
 
         else :
             await ctx.channel.send("**Item not found**")
 
-
-        
-    
-        
-
     else :
         success = stats.get().to_dict()['itemFound']
         stats.update({'itemFound' : success + 1})
-
 
 
 @bot.command()
@@ -267,14 +255,12 @@ async def search(ctx, *args):
     await search_book.open_book(bot, ctx.channel, ctx.author)
 
 
-
-
 @bot.command()
 async def tag(ctx):
 
     # 0⃣ 1⃣ 2⃣ 3⃣ 4⃣ 5⃣ 6⃣ 7⃣ 8⃣ 9⃣ 🔟 - emojis for reference
 
-     # TODO: Include Lore?
+    # TODO: Include Lore?
     PRESET_TAGS = {
         "1⃣" : 'Group',
         "2⃣" : 'Tier',
@@ -301,14 +287,11 @@ async def tag(ctx):
     for tag in PRESET_TAGS :
         await instructions_message.add_reaction(tag)
 
-
-
     def check_response(reaction, user) :
         return str(reaction) in PRESET_TAGS and user == ctx.author
 
-    def check_author (message) :
+    def check_author(message) :
         return message.author == ctx.author
-
 
     tagType = ""
 
@@ -322,30 +305,22 @@ async def tag(ctx):
             tagTypeM = await bot.wait_for('message', timeout = 10.0, check = check_author)
             tagType = tagTypeM.content.capitalize()
 
-
         else :
             for tag in PRESET_TAGS :
                 if reaction == tag :
                     tagType = PRESET_TAGS[reaction]
                     await ctx.channel.send("**`You are searching in " + tagType + "!`**")
 
-
     except asyncio.TimeoutError:
         await instructions_message.clear_reactions()
-
-
-
 
     tag_name_message = await ctx.channel.send('What is the tag you are searching for? (ex. Protection I, Wooden Sword, Armor, Unique, etc.)')
     try :
         tagNameM = await bot.wait_for('message', timeout = 10.0, check = check_author)
         tagName = tagNameM.content.capitalize()
 
-
     except asyncio.TimeoutError:
         await tag_name_message.clear_reactions()
-    
-
 
     # TODO : Group items into tag categories so searching is less expensive
 
@@ -354,7 +329,7 @@ async def tag(ctx):
         if tagType in item.tags.keys() and tagName in item.tags[tagType] :
             taggedItems.append(item.name)
 
-    if not taggedItems : # If no items of the tag were found, add filler
+    if not taggedItems :  # If no items of the tag were found, add filler
         taggedItems.append("No items found!")
 
     chapter = Chapter(title = tagName, lines = taggedItems)
@@ -364,11 +339,9 @@ async def tag(ctx):
     tag_search_number = stats.get().to_dict()['tagSearch']
     stats.update({'tagSearch' : tag_search_number + 1})
 
-    print ('Tag Search for ' + tagName + " in " + tagType)
+    print('Tag Search for ' + tagName + " in " + tagType)
 
     await tag_book.open_book(bot, ctx.channel, ctx.author)
-
-
 
 
 @bot.command(pass_context=True)
@@ -384,8 +357,6 @@ async def itemlist(ctx) :
     item_book = AlphabeticalBook(item_names, title = "**Item List**", description = "**Hit the reaction buttons to go forwards or backwards!**", per_page = 20)
 
     await item_book.open_book(bot, ctx.message.channel, ctx.message.author)
-    
-
 
 
 bot_token_secret_path = secret_manager.secret_version_path('monumenta-item-index', 'bot-token', 'latest')

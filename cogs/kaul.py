@@ -17,7 +17,6 @@ class Kaul (commands.Cog):
         # print("SERVER GOTTEN + " + self.server)
         # self.kaul_role = discord.utils.get(self.server.roles, name="Kaul")
 
-
     @commands.command()
     async def rank(self, ctx):
 
@@ -29,8 +28,6 @@ class Kaul (commands.Cog):
 
         await author.add_roles(kaul_role)
         await ctx.channel.send(mention + ", you now have the role for Kaul")
-
-
 
     @commands.command()
     async def derank(self, ctx):
@@ -44,22 +41,18 @@ class Kaul (commands.Cog):
         await author.remove_roles(kaul_role)
         await ctx.channel.send(mention + ", you have removed your role for Kaul")
 
-
     @commands.command()
     async def kaultime(self, ctx, *args):
 
         server = self.bot.get_guild(MONUMENTA_SERVER_ID)
         kaul_role = discord.utils.get(server.roles, name="Kaul")
 
-        author = ctx.message.author.id
         mention = kaul_role.mention
-
 
         if (args) :
             await ctx.channel.send(mention + " , Kaul in " + args[0] + " seconds!")
         else :
             await ctx.channel.send(mention + ", its Kaul time!")
-
 
     @commands.command()
     async def kaulnum(self, ctx, *args):
@@ -74,8 +67,6 @@ class Kaul (commands.Cog):
 
         await ctx.channel.send(str(count) + " players have the Kaul role")
 
-
-
     @commands.command()
     async def whohaskaul(self, ctx, *args):
 
@@ -87,12 +78,10 @@ class Kaul (commands.Cog):
             if (kaul_role in member.roles) :
                 members_with_role.append('**' + member.display_name + '** (' + member.name + ')')
 
-
         chapter = Chapter('Kaul', members_with_role)
         kaul_book = Book([chapter], title = "**Kaul Roles**", description = "Members with the Kaul Role", per_page = 10)
 
         await kaul_book.open_book(self.bot, ctx.channel, ctx.author)
-
 
 
 def setup(bot):
