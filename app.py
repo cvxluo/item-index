@@ -144,11 +144,6 @@ async def on_ready():
 
 
 @bot.command()
-async def ping():
-    await bot.say('Pong!')
-
-
-@bot.command()
 async def item(ctx, *args):
     if not args :
         await ctx.channel.send("**No item name specified!**")
