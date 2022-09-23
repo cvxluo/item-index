@@ -29,7 +29,7 @@ idna==2.10
 idna-ssl==1.1.0
 msgpack==1.0.0
 multidict==4.7.6
-protobuf==3.13.0
+protobuf==3.18.3
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.20
